@@ -9,11 +9,7 @@
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==">
   <title>Token Conjurer</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -23,10 +19,7 @@
       padding: 16px;
     }
 
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-    }
+    .container { max-width: 600px; margin: 0 auto; }
 
     .header {
       display: flex;
@@ -57,14 +50,8 @@
       font-size: 14px;
     }
 
-    .bt-btn.connected {
-      background: #10b981;
-    }
-
-    .bt-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+    .bt-btn.connected { background: #10b981; }
+    .bt-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .search-box {
       display: flex;
@@ -73,10 +60,7 @@
       margin-bottom: 24px;
     }
 
-    .search-buttons {
-      display: flex;
-      gap: 8px;
-    }
+    .search-buttons { display: flex; gap: 8px; }
 
     .search-input {
       width: 100%;
@@ -100,35 +84,56 @@
       transition: all 0.3s;
     }
 
-    .search-btn.token {
-      background: #ec4899;
+    .search-btn.token { background: #ec4899; }
+    .search-btn:hover { opacity: 0.9; }
+    .search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
     }
 
-    .search-btn:hover {
-      opacity: 0.9;
+    .tab {
+      flex: 1;
+      padding: 12px 4px;
+      border: 2px solid #333;
+      border-radius: 10px;
+      background: #1a1a2e;
+      color: #888;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
     }
 
-    .search-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    .tab:hover { border-color: #555; color: #ccc; }
+    .tab.active { border-color: #8b5cf6; color: #fff; background: rgba(139, 92, 246, 0.15); }
+    .tab .tab-count {
+      display: block;
+      font-size: 11px;
+      color: #555;
+      margin-top: 2px;
+      font-weight: 400;
     }
+    .tab.active .tab-count { color: #a78bfa; }
 
-    .cards-grid {
-      display: grid;
-      gap: 12px;
-    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
+    /* Card items */
     .card-item {
       background: #1a1a2e;
       border: 2px solid #333;
       border-radius: 12px;
       padding: 12px;
       transition: all 0.3s;
+      margin-bottom: 12px;
     }
 
-    .card-item:hover {
-      border-color: #8b5cf6;
-    }
+    .card-item:hover { border-color: #8b5cf6; }
 
     .card-main {
       display: flex;
@@ -144,10 +149,7 @@
       object-fit: cover;
     }
 
-    .card-info {
-      flex: 1;
-      min-width: 0;
-    }
+    .card-info { flex: 1; min-width: 0; }
 
     .card-name {
       font-weight: 600;
@@ -156,10 +158,7 @@
       word-wrap: break-word;
     }
 
-    .card-set {
-      font-size: 12px;
-      color: #888;
-    }
+    .card-set { font-size: 12px; color: #888; }
 
     .preferred-badge {
       display: inline-block;
@@ -180,9 +179,7 @@
       display: inline-block;
     }
 
-    .version-toggle:hover {
-      color: #a78bfa;
-    }
+    .version-toggle:hover { color: #a78bfa; }
 
     .version-selector {
       display: none;
@@ -193,9 +190,7 @@
       border-top: 1px solid #333;
     }
 
-    .version-selector.open {
-      display: flex;
-    }
+    .version-selector.open { display: flex; }
 
     .version-btn {
       padding: 6px 12px;
@@ -208,18 +203,17 @@
       transition: all 0.3s;
     }
 
-    .version-btn:hover {
-      border-color: #8b5cf6;
-      background: #3a3a4e;
-    }
+    .version-btn:hover { border-color: #8b5cf6; background: #3a3a4e; }
+    .version-btn.selected { border-color: #8b5cf6; background: #8b5cf6; }
 
-    .version-btn.selected {
-      border-color: #8b5cf6;
-      background: #8b5cf6;
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
     }
 
     .send-btn {
-      width: 100%;
+      flex: 1;
       padding: 10px;
       border: none;
       border-radius: 6px;
@@ -228,23 +222,54 @@
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s;
-      margin-top: 8px;
     }
 
-    .send-btn:hover {
-      background: #7c3aed;
+    .send-btn:hover { background: #7c3aed; }
+    .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .fav-btn {
+      padding: 10px 14px;
+      border: 2px solid #333;
+      border-radius: 6px;
+      background: none;
+      color: #666;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+      line-height: 1;
     }
 
-    .send-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+    .fav-btn:hover { border-color: #f59e0b; color: #f59e0b; }
+    .fav-btn.favourited { border-color: #f59e0b; color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
+
+    .deck-add-btn {
+      padding: 10px 14px;
+      border: 2px solid #333;
+      border-radius: 6px;
+      background: none;
+      color: #666;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      line-height: 1;
     }
 
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #888;
+    .deck-add-btn:hover { border-color: #10b981; color: #10b981; }
+
+    .remove-btn {
+      padding: 10px 14px;
+      border: 2px solid #333;
+      border-radius: 6px;
+      background: none;
+      color: #666;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
     }
+
+    .remove-btn:hover { border-color: #ef4444; color: #ef4444; }
+
+    .loading { text-align: center; padding: 40px; color: #888; }
 
     .spinner {
       border: 3px solid #333;
@@ -256,9 +281,7 @@
       margin: 0 auto 16px;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     .status {
       text-align: center;
@@ -274,8 +297,7 @@
     .status::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       height: 100%;
       width: var(--progress-width, 0%);
       background: rgba(16, 185, 129, 0.3);
@@ -283,437 +305,982 @@
       z-index: 0;
     }
 
-    .status.success::before {
-      background: rgba(16, 185, 129, 0.3);
+    .status > div { position: relative; z-index: 1; }
+    .status-time { font-size: 12px; color: #ffffff; margin-top: 4px; opacity: 0.8; }
+    .status.success { border-color: #10b981; color: #10b981; }
+    .status.error { border-color: #ef4444; color: #ef4444; }
+    .status.info { border-color: #8b5cf6; color: #8b5cf6; }
+
+    canvas.hidden { display: none; }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: #555; }
+    .empty-state-icon { font-size: 32px; margin-bottom: 8px; }
+    .empty-state-text { font-size: 14px; }
+    .recent-time { font-size: 11px; color: #555; margin-top: 2px; }
+
+    /* Deck styles */
+    .deck-item {
+      background: #1a1a2e;
+      border: 2px solid #333;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s;
     }
 
-    .status > div {
-      position: relative;
-      z-index: 1;
+    .deck-item:hover { border-color: #444; }
+
+    .deck-header {
+      display: flex;
+      align-items: center;
+      padding: 14px;
+      cursor: pointer;
+      gap: 12px;
     }
 
-    .status-time {
+    .deck-header-info { flex: 1; }
+
+    .deck-header-name {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .deck-header-count {
       font-size: 12px;
-      color: #ffffff;
-      margin-top: 4px;
-      opacity: 0.8;
+      color: #888;
+      margin-top: 2px;
     }
 
-    .status.success {
-      border-color: #10b981;
-      color: #10b981;
+    .deck-header-arrow {
+      color: #555;
+      font-size: 14px;
+      transition: transform 0.2s;
     }
 
-    .status.error {
-      border-color: #ef4444;
-      color: #ef4444;
-    }
+    .deck-item.open .deck-header-arrow { transform: rotate(90deg); }
+    .deck-item.open { border-color: #8b5cf6; }
 
-    .status.info {
-      border-color: #8b5cf6;
-      color: #8b5cf6;
-    }
-
-    canvas {
+    .deck-cards {
       display: none;
+      padding: 0 14px 14px;
+      border-top: 1px solid #333;
     }
+
+    .deck-item.open .deck-cards { display: block; }
+
+    .deck-card-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #2a2a3e;
+    }
+
+    .deck-card-row:last-child { border-bottom: none; }
+
+    .deck-card-thumb {
+      width: 40px;
+      height: 56px;
+      border-radius: 4px;
+      object-fit: cover;
+    }
+
+    .deck-card-info { flex: 1; min-width: 0; }
+
+    .deck-card-name {
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .deck-card-set { font-size: 11px; color: #666; }
+
+    .deck-card-actions { display: flex; gap: 6px; }
+
+    .deck-card-send {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 5px;
+      background: #8b5cf6;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .deck-card-send:hover { background: #7c3aed; }
+
+    .deck-card-remove {
+      padding: 6px 8px;
+      border: 1px solid #444;
+      border-radius: 5px;
+      background: none;
+      color: #666;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .deck-card-remove:hover { border-color: #ef4444; color: #ef4444; }
+
+    .deck-actions {
+      display: flex;
+      gap: 8px;
+      padding: 10px 14px;
+      border-top: 1px solid #2a2a3e;
+    }
+
+    .deck-rename-btn, .deck-delete-btn {
+      padding: 6px 12px;
+      border: 1px solid #444;
+      border-radius: 5px;
+      background: none;
+      color: #888;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .deck-rename-btn:hover { border-color: #8b5cf6; color: #8b5cf6; }
+    .deck-delete-btn:hover { border-color: #ef4444; color: #ef4444; }
+
+    .new-deck-btn {
+      width: 100%;
+      padding: 14px;
+      border: 2px dashed #444;
+      border-radius: 12px;
+      background: none;
+      color: #888;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 12px;
+    }
+
+    .new-deck-btn:hover { border-color: #10b981; color: #10b981; }
+
+    /* Deck picker modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #1a1a2e;
+      border: 2px solid #8b5cf6;
+      border-radius: 16px;
+      padding: 20px;
+      width: 100%;
+      max-width: 400px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .modal-deck-btn {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: #2a2a3e;
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-bottom: 8px;
+      text-align: left;
+      transition: all 0.2s;
+    }
+
+    .modal-deck-btn:hover { border-color: #8b5cf6; }
+
+    .modal-deck-count { font-size: 12px; color: #888; margin-left: 8px; }
+
+    .modal-new-deck {
+      width: 100%;
+      padding: 12px;
+      border: 2px dashed #444;
+      border-radius: 8px;
+      background: none;
+      color: #10b981;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+
+    .modal-new-deck:hover { border-color: #10b981; }
+
+    .modal-cancel {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #333;
+      color: #888;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .modal-cancel:hover { background: #444; color: #fff; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>Token Conjurera</h1>
+      <h1>Token Conjurer</h1>
       <button class="bt-btn" id="btBtn">Connect BT</button>
     </div>
 
     <div id="status"></div>
 
-    <div class="search-box">
-      <input 
-        type="text" 
-        class="search-input" 
-        id="searchInput" 
-        placeholder="Search for MTG cards..."
-      >
-      <div class="search-buttons">
-        <button class="search-btn" id="searchBtn">Search Cards</button>
-        <button class="search-btn token" id="tokenBtn">Search Tokens</button>
-      </div>
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="search">Search</button>
+      <button class="tab" data-tab="decks">Decks <span class="tab-count" id="deckCount"></span></button>
+      <button class="tab" data-tab="favourites">Favs <span class="tab-count" id="favCount"></span></button>
+      <button class="tab" data-tab="recent">Recent <span class="tab-count" id="recentCount"></span></button>
     </div>
 
-    <div id="results"></div>
+    <!-- Search Tab -->
+    <div class="tab-content active" id="tab-search">
+      <div class="search-box">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search for MTG cards...">
+        <div class="search-buttons">
+          <button class="search-btn" id="searchBtn">Search Cards</button>
+          <button class="search-btn token" id="tokenBtn">Search Tokens</button>
+        </div>
+      </div>
+      <div id="results"></div>
+    </div>
+
+    <!-- Decks Tab -->
+    <div class="tab-content" id="tab-decks">
+      <div id="decksList"></div>
+    </div>
+
+    <!-- Favourites Tab -->
+    <div class="tab-content" id="tab-favourites">
+      <div id="favouritesList"></div>
+    </div>
+
+    <!-- Recent Tab -->
+    <div class="tab-content" id="tab-recent">
+      <div id="recentList"></div>
+    </div>
   </div>
 
-  <canvas id="canvas"></canvas>
+  <!-- Deck picker modal -->
+  <div class="modal-overlay" id="deckModal">
+    <div class="modal">
+      <div class="modal-title">Add to Deck</div>
+      <div id="deckModalList"></div>
+      <button class="modal-new-deck" id="modalNewDeck">+ New Deck</button>
+      <button class="modal-cancel" id="modalCancel">Cancel</button>
+    </div>
+  </div>
+
+  <canvas id="canvas" class="hidden"></canvas>
 
   <script>
+    // =====================================================
+    // STATE
+    // =====================================================
     let btDevice = null;
     let btCharacteristic = null;
-    let cardPreferences = {}; // Store preferred versions
+    let cardPreferences = {};
+    let favourites = [];
+    let recentCards = [];
+    let decks = [];         // [{name, cards: [{name, set, set_name, image_small, image_large, id}]}]
+    let pendingDeckCard = null; // card waiting to be added to a deck
+
+    const MAX_RECENT = 20;
 
     const btBtn = document.getElementById('btBtn');
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
     const tokenBtn = document.getElementById('tokenBtn');
-    const results = document.getElementById('results');
-    const status = document.getElementById('status');
+    const resultsEl = document.getElementById('results');
+    const statusEl = document.getElementById('status');
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
-    // Load preferences from localStorage
-    try {
-      const saved = localStorage.getItem('mtg_card_preferences');
-      if (saved) cardPreferences = JSON.parse(saved);
-    } catch (e) {
-      console.log('Could not load preferences');
+    // Load stored data
+    try { const s = localStorage.getItem('mtg_card_preferences'); if (s) cardPreferences = JSON.parse(s); } catch (e) {}
+    try { const s = localStorage.getItem('mtg_favourites'); if (s) favourites = JSON.parse(s); } catch (e) {}
+    try { const s = localStorage.getItem('mtg_recent'); if (s) recentCards = JSON.parse(s); } catch (e) {}
+    try { const s = localStorage.getItem('mtg_decks'); if (s) decks = JSON.parse(s); } catch (e) {}
+
+    function saveFavourites() { try { localStorage.setItem('mtg_favourites', JSON.stringify(favourites)); } catch (e) {} updateTabCounts(); }
+    function saveRecent() { try { localStorage.setItem('mtg_recent', JSON.stringify(recentCards)); } catch (e) {} updateTabCounts(); }
+    function saveDecks() { try { localStorage.setItem('mtg_decks', JSON.stringify(decks)); } catch (e) {} updateTabCounts(); }
+
+    function updateTabCounts() {
+      document.getElementById('favCount').textContent = favourites.length > 0 ? `(${favourites.length})` : '';
+      document.getElementById('recentCount').textContent = recentCards.length > 0 ? `(${recentCards.length})` : '';
+      const totalDeckCards = decks.reduce((s, d) => s + d.cards.length, 0);
+      document.getElementById('deckCount').textContent = decks.length > 0 ? `(${decks.length})` : '';
+    }
+    updateTabCounts();
+
+    // =====================================================
+    // TABS
+    // =====================================================
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+        if (tab.dataset.tab === 'favourites') renderFavourites();
+        if (tab.dataset.tab === 'recent') renderRecent();
+        if (tab.dataset.tab === 'decks') renderDecks();
+      });
+    });
+
+    // =====================================================
+    // CARD DATA HELPERS
+    // =====================================================
+
+    function getImageUris(card) {
+      if (card.image_uris) return card.image_uris;
+      if (card.card_faces && card.card_faces[0] && card.card_faces[0].image_uris) return card.card_faces[0].image_uris;
+      return null;
     }
 
-    // Bluetooth connection
+    function cardToStorable(card) {
+      const uris = getImageUris(card);
+      return {
+        name: card.name, set: card.set, set_name: card.set_name, id: card.id,
+        image_small: uris?.small || '', image_large: uris?.png || uris?.large || ''
+      };
+    }
+
+    function isFavourited(cardId) { return favourites.some(f => f.id === cardId); }
+
+    function toggleFavourite(card) {
+      const idx = favourites.findIndex(f => f.id === card.id);
+      if (idx >= 0) favourites.splice(idx, 1);
+      else favourites.push(cardToStorable(card));
+      saveFavourites();
+    }
+
+    function addToRecent(card) {
+      recentCards = recentCards.filter(r => r.id !== card.id);
+      const entry = cardToStorable(card);
+      entry.sentAt = Date.now();
+      recentCards.unshift(entry);
+      if (recentCards.length > MAX_RECENT) recentCards = recentCards.slice(0, MAX_RECENT);
+      saveRecent();
+    }
+
+    function refreshSearchFavStars() {
+      resultsEl.querySelectorAll('.card-item').forEach(cardEl => {
+        try {
+          const versions = JSON.parse(cardEl.dataset.versions);
+          const card = versions[parseInt(cardEl.dataset.selectedIndex)];
+          const safe = card.name.replace(/[^a-z0-9]/gi, '');
+          const favBtn = document.getElementById(`fav-${safe}`);
+          if (favBtn) favBtn.classList.toggle('favourited', isFavourited(card.id));
+        } catch (e) {}
+      });
+    }
+
+    // =====================================================
+    // BLUETOOTH
+    // =====================================================
+
     btBtn.addEventListener('click', async () => {
       try {
-        showStatus('Connecting to Bluetooth...', 'info');
-        
+        showStatus('Connecting...', 'info');
         const device = await navigator.bluetooth.requestDevice({
           filters: [{ name: 'MTG_EPaper' }],
           optionalServices: ['0000ffe0-0000-1000-8000-00805f9b34fb']
         });
-
         const server = await device.gatt.connect();
         const service = await server.getPrimaryService('0000ffe0-0000-1000-8000-00805f9b34fb');
         btCharacteristic = await service.getCharacteristic('0000ffe1-0000-1000-8000-00805f9b34fb');
-        
         btDevice = device;
         btBtn.textContent = 'Connected';
         btBtn.classList.add('connected');
         showStatus('Connected to Token Conjurer!', 'success');
       } catch (error) {
-        showStatus('Bluetooth connection failed: ' + error.message, 'error');
+        showStatus('Connection failed: ' + error.message, 'error');
       }
     });
 
-    // Search cards
+    // =====================================================
+    // SEARCH
+    // =====================================================
     searchBtn.addEventListener('click', () => searchCards(false));
     tokenBtn.addEventListener('click', () => searchCards(true));
-    searchInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') searchCards(false);
-    });
+    searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchCards(false); });
 
     async function searchCards(isToken = false) {
       const query = searchInput.value.trim();
       if (!query) return;
-
       searchBtn.disabled = true;
-      results.innerHTML = '<div class="loading"><div class="spinner"></div><div>Searching Scryfall...</div></div>';
+      tokenBtn.disabled = true;
+      resultsEl.innerHTML = '<div class="loading"><div class="spinner"></div><div>Searching Scryfall...</div></div>';
 
       try {
-        // For tokens, use is:token syntax. For cards, do normal search
-        const searchQuery = isToken ? `${query} is:token` : query;
-        const response = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(searchQuery)}&unique=prints&order=released`);
-        const data = await response.json();
-
+        const sq = isToken ? `${query} is:token` : query;
+        const resp = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(sq)}&unique=prints&order=released`);
+        const data = await resp.json();
         if (data.data && data.data.length > 0) {
-          // Group by card name
           const grouped = {};
-          data.data.forEach(card => {
-            const name = card.name;
-            if (!grouped[name]) {
-              grouped[name] = [];
-            }
-            grouped[name].push(card);
-          });
-
+          data.data.forEach(card => { if (!grouped[card.name]) grouped[card.name] = []; grouped[card.name].push(card); });
           displayGroupedCards(grouped);
         } else {
-          results.innerHTML = '<div class="loading">No cards found</div>';
+          resultsEl.innerHTML = '<div class="loading">No cards found</div>';
         }
       } catch (error) {
-        results.innerHTML = `<div class="loading">Error: ${error.message}</div>`;
+        resultsEl.innerHTML = `<div class="loading">Error: ${error.message}</div>`;
       } finally {
         searchBtn.disabled = false;
+        tokenBtn.disabled = false;
       }
     }
 
     function displayGroupedCards(grouped) {
-      results.innerHTML = '';
-      
+      resultsEl.innerHTML = '';
       Object.entries(grouped).forEach(([cardName, versions]) => {
-        // Get preferred version or most recent
         const preferredSet = cardPreferences[cardName];
         let selectedVersion = versions.find(v => v.set === preferredSet) || versions[0];
-        
+        const isPreferred = preferredSet && selectedVersion.set === preferredSet;
+        const uris = getImageUris(selectedVersion);
+        const fav = isFavourited(selectedVersion.id);
+        const safe = cardName.replace(/[^a-z0-9]/gi, '');
+        const escaped = cardName.replace(/'/g, "\\'");
+
         const cardEl = document.createElement('div');
         cardEl.className = 'card-item';
-        
-        const isPreferred = preferredSet && selectedVersion.set === preferredSet;
-        
         cardEl.innerHTML = `
           <div class="card-main">
-            <img class="card-thumb" src="${selectedVersion.image_uris?.small || ''}" alt="${cardName}" id="thumb-${cardName.replace(/[^a-z0-9]/gi, '')}">
+            <img class="card-thumb" src="${uris?.small || ''}" alt="${cardName}" id="thumb-${safe}">
             <div class="card-info">
-              <div class="card-name">
-                ${cardName}
-                ${isPreferred ? '<span class="preferred-badge">Preferred</span>' : ''}
-              </div>
-              <div class="card-set" id="set-${cardName.replace(/[^a-z0-9]/gi, '')}">${selectedVersion.set_name} (${selectedVersion.set.toUpperCase()})</div>
-              ${versions.length > 1 ? `<div class="version-toggle" onclick="toggleVersions('${cardName.replace(/'/g, "\\'")}')">Choose version</div>` : ''}
+              <div class="card-name">${cardName}${isPreferred ? '<span class="preferred-badge">Preferred</span>' : ''}</div>
+              <div class="card-set" id="set-${safe}">${selectedVersion.set_name} (${selectedVersion.set.toUpperCase()})</div>
+              ${versions.length > 1 ? `<div class="version-toggle" onclick="toggleVersions('${escaped}')">Choose version (${versions.length})</div>` : ''}
             </div>
           </div>
-          <button class="send-btn" onclick="sendSelectedCard('${cardName.replace(/'/g, "\\'")}')">Send to E-Paper</button>
+          <div class="card-actions">
+            <button class="send-btn" onclick="sendSelectedCard('${escaped}')">Send to E-Paper</button>
+            <button class="fav-btn ${fav ? 'favourited' : ''}" id="fav-${safe}" onclick="toggleFavFromSearch('${escaped}')">&#9733;</button>
+            <button class="deck-add-btn" onclick="addToDeckFromSearch('${escaped}')" title="Add to deck">+D</button>
+          </div>
           ${versions.length > 1 ? `
-            <div class="version-selector" id="versions-${cardName.replace(/[^a-z0-9]/gi, '')}">
+            <div class="version-selector" id="versions-${safe}">
               ${versions.map((v, idx) => `
-                <button class="version-btn ${v.id === selectedVersion.id ? 'selected' : ''}" 
-                        onclick="selectVersion('${cardName.replace(/'/g, "\\'")}', ${idx})">
-                  ${v.set.toUpperCase()}
-                </button>
+                <button class="version-btn ${v.id === selectedVersion.id ? 'selected' : ''}"
+                        onclick="selectVersion('${escaped}', ${idx})">${v.set.toUpperCase()}</button>
               `).join('')}
-            </div>
-          ` : ''}
+            </div>` : ''}
         `;
-        
-        results.appendChild(cardEl);
-        
-        // Store versions data
+        resultsEl.appendChild(cardEl);
         cardEl.dataset.versions = JSON.stringify(versions);
         cardEl.dataset.selectedIndex = versions.findIndex(v => v.id === selectedVersion.id).toString();
       });
     }
 
     window.toggleVersions = function(cardName) {
-      const safeCardName = cardName.replace(/[^a-z0-9]/gi, '');
-      const versionsEl = document.getElementById(`versions-${safeCardName}`);
-      if (versionsEl) {
-        versionsEl.classList.toggle('open');
-      }
+      const el = document.getElementById(`versions-${cardName.replace(/[^a-z0-9]/gi, '')}`);
+      if (el) el.classList.toggle('open');
     };
 
-    window.selectVersion = function(cardName, versionIndex) {
-      const safeCardName = cardName.replace(/[^a-z0-9]/gi, '');
-      const cardEl = Array.from(results.children).find(el => 
-        el.querySelector(`#thumb-${safeCardName}`)
-      );
-      
+    window.selectVersion = function(cardName, idx) {
+      const safe = cardName.replace(/[^a-z0-9]/gi, '');
+      const cardEl = Array.from(resultsEl.children).find(el => el.querySelector(`#thumb-${safe}`));
       if (!cardEl) return;
-      
       const versions = JSON.parse(cardEl.dataset.versions);
-      const selected = versions[versionIndex];
-      cardEl.dataset.selectedIndex = versionIndex;
-      
-      // Update thumbnail
-      document.getElementById(`thumb-${safeCardName}`).src = selected.image_uris?.small || '';
-      
-      // Update set name and badge
-      const setEl = document.getElementById(`set-${safeCardName}`);
-      setEl.textContent = `${selected.set_name} (${selected.set.toUpperCase()})`;
-      
-      // Update preferred badge
-      const cardNameEl = setEl.parentElement.querySelector('.card-name');
-      const existingBadge = cardNameEl.querySelector('.preferred-badge');
-      if (existingBadge) existingBadge.remove();
-      cardNameEl.innerHTML = cardName + '<span class="preferred-badge">Preferred</span>';
-      
-      // Update button states
-      const versionBtns = document.querySelectorAll(`#versions-${safeCardName} .version-btn`);
-      versionBtns.forEach((btn, idx) => {
-        btn.classList.toggle('selected', idx === versionIndex);
-      });
-      
-      // Save preference
+      const selected = versions[idx];
+      cardEl.dataset.selectedIndex = idx;
+      const uris = getImageUris(selected);
+      document.getElementById(`thumb-${safe}`).src = uris?.small || '';
+      document.getElementById(`set-${safe}`).textContent = `${selected.set_name} (${selected.set.toUpperCase()})`;
+      const nameEl = cardEl.querySelector('.card-name');
+      nameEl.innerHTML = cardName + '<span class="preferred-badge">Preferred</span>';
+      document.querySelectorAll(`#versions-${safe} .version-btn`).forEach((btn, i) => { btn.classList.toggle('selected', i === idx); });
+      const favBtn = document.getElementById(`fav-${safe}`);
+      if (favBtn) favBtn.classList.toggle('favourited', isFavourited(selected.id));
       cardPreferences[cardName] = selected.set;
-      try {
-        localStorage.setItem('mtg_card_preferences', JSON.stringify(cardPreferences));
-      } catch (e) {
-        console.log('Could not save preference');
-      }
+      try { localStorage.setItem('mtg_card_preferences', JSON.stringify(cardPreferences)); } catch (e) {}
+    };
+
+    window.toggleFavFromSearch = function(cardName) {
+      const safe = cardName.replace(/[^a-z0-9]/gi, '');
+      const cardEl = Array.from(resultsEl.children).find(el => el.querySelector(`#thumb-${safe}`));
+      if (!cardEl) return;
+      const versions = JSON.parse(cardEl.dataset.versions);
+      const card = versions[parseInt(cardEl.dataset.selectedIndex)];
+      toggleFavourite(card);
+      const favBtn = document.getElementById(`fav-${safe}`);
+      if (favBtn) favBtn.classList.toggle('favourited', isFavourited(card.id));
     };
 
     window.sendSelectedCard = async function(cardName) {
-      // Scroll to top to see progress
       window.scrollTo({ top: 0, behavior: 'smooth' });
-      
-      const safeCardName = cardName.replace(/[^a-z0-9]/gi, '');
-      const cardEl = Array.from(results.children).find(el => 
-        el.querySelector(`#thumb-${safeCardName}`)
-      );
-      
+      const safe = cardName.replace(/[^a-z0-9]/gi, '');
+      const cardEl = Array.from(resultsEl.children).find(el => el.querySelector(`#thumb-${safe}`));
       if (!cardEl) return;
-      
       const versions = JSON.parse(cardEl.dataset.versions);
-      const selectedIndex = parseInt(cardEl.dataset.selectedIndex);
-      const card = versions[selectedIndex];
-      
-      await sendCard(card.image_uris?.png || card.image_uris?.large, card.name);
+      const card = versions[parseInt(cardEl.dataset.selectedIndex)];
+      const uris = getImageUris(card);
+      if (!uris) { showStatus('No image available', 'error'); return; }
+      addToRecent(card);
+      await sendCard(uris.png || uris.large, card.name);
     };
 
-    async function sendCard(imageUrl, cardName) {
-      if (!btCharacteristic) {
-        showStatus('Please connect Bluetooth first', 'error');
+    window.addToDeckFromSearch = function(cardName) {
+      const safe = cardName.replace(/[^a-z0-9]/gi, '');
+      const cardEl = Array.from(resultsEl.children).find(el => el.querySelector(`#thumb-${safe}`));
+      if (!cardEl) return;
+      const versions = JSON.parse(cardEl.dataset.versions);
+      const card = versions[parseInt(cardEl.dataset.selectedIndex)];
+      openDeckPicker(card);
+    };
+
+    // =====================================================
+    // DECK PICKER MODAL
+    // =====================================================
+
+    function openDeckPicker(card) {
+      pendingDeckCard = card;
+      const list = document.getElementById('deckModalList');
+      list.innerHTML = '';
+      decks.forEach((deck, idx) => {
+        const alreadyIn = deck.cards.some(c => c.id === card.id);
+        const btn = document.createElement('button');
+        btn.className = 'modal-deck-btn';
+        btn.innerHTML = `${deck.name} <span class="modal-deck-count">${deck.cards.length} cards${alreadyIn ? ' · already added' : ''}</span>`;
+        btn.disabled = alreadyIn;
+        btn.style.opacity = alreadyIn ? '0.5' : '1';
+        btn.onclick = () => { addCardToDeck(idx, card); closeDeckPicker(); };
+        list.appendChild(btn);
+      });
+      document.getElementById('deckModal').classList.add('open');
+    }
+
+    function closeDeckPicker() {
+      document.getElementById('deckModal').classList.remove('open');
+      pendingDeckCard = null;
+    }
+
+    document.getElementById('modalCancel').onclick = closeDeckPicker;
+    document.getElementById('deckModal').onclick = (e) => { if (e.target.id === 'deckModal') closeDeckPicker(); };
+
+    document.getElementById('modalNewDeck').onclick = () => {
+      const name = prompt('Deck name:');
+      if (!name || !name.trim()) return;
+      decks.push({ name: name.trim(), cards: [] });
+      saveDecks();
+      if (pendingDeckCard) {
+        addCardToDeck(decks.length - 1, pendingDeckCard);
+        closeDeckPicker();
+      } else {
+        closeDeckPicker();
+        renderDecks();
+      }
+    };
+
+    function addCardToDeck(deckIdx, card) {
+      const storable = cardToStorable(card);
+      if (!decks[deckIdx].cards.some(c => c.id === storable.id)) {
+        decks[deckIdx].cards.push(storable);
+        saveDecks();
+        showStatus(`Added to ${decks[deckIdx].name}`, 'success');
+      }
+    }
+
+    // =====================================================
+    // DECKS TAB
+    // =====================================================
+
+    function renderDecks() {
+      const el = document.getElementById('decksList');
+      if (decks.length === 0) {
+        el.innerHTML = `
+          <button class="new-deck-btn" onclick="createNewDeck()">+ Create New Deck</button>
+          <div class="empty-state">
+            <div class="empty-state-icon">&#127183;</div>
+            <div class="empty-state-text">No decks yet.<br>Create a deck and add cards from Search.</div>
+          </div>`;
         return;
       }
 
-      try {
-        showStatus(`Processing ${cardName}...`, 'info', 0);
+      el.innerHTML = '<button class="new-deck-btn" onclick="createNewDeck()">+ Create New Deck</button>';
 
-        // Load image
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        
-        await new Promise((resolve, reject) => {
-          img.onload = resolve;
-          img.onerror = reject;
-          img.src = imageUrl;
+      decks.forEach((deck, di) => {
+        const div = document.createElement('div');
+        div.className = 'deck-item';
+        div.id = `deck-${di}`;
+
+        let cardsHTML = '';
+        deck.cards.forEach((card, ci) => {
+          cardsHTML += `
+            <div class="deck-card-row">
+              <img class="deck-card-thumb" src="${card.image_small}" alt="${card.name}">
+              <div class="deck-card-info">
+                <div class="deck-card-name">${card.name}</div>
+                <div class="deck-card-set">${card.set_name} (${card.set.toUpperCase()})</div>
+              </div>
+              <div class="deck-card-actions">
+                <button class="deck-card-send" onclick="sendDeckCard(${di},${ci})">Send</button>
+                <button class="deck-card-remove" onclick="removeDeckCard(${di},${ci})">&#10005;</button>
+              </div>
+            </div>`;
         });
 
-        // Resize and convert to grayscale
+        div.innerHTML = `
+          <div class="deck-header" onclick="toggleDeck(${di})">
+            <div class="deck-header-info">
+              <div class="deck-header-name">${deck.name}</div>
+              <div class="deck-header-count">${deck.cards.length} card${deck.cards.length !== 1 ? 's' : ''}</div>
+            </div>
+            <div class="deck-header-arrow">&#9654;</div>
+          </div>
+          <div class="deck-cards">
+            ${cardsHTML || '<div style="padding:12px 0;color:#555;text-align:center;">No cards yet — add from Search tab</div>'}
+            <div class="deck-actions">
+              <button class="deck-rename-btn" onclick="renameDeck(${di})">Rename</button>
+              <button class="deck-delete-btn" onclick="deleteDeck(${di})">Delete Deck</button>
+            </div>
+          </div>`;
+
+        el.appendChild(div);
+      });
+    }
+
+    window.createNewDeck = function() {
+      const name = prompt('Deck name:');
+      if (!name || !name.trim()) return;
+      decks.push({ name: name.trim(), cards: [] });
+      saveDecks();
+      renderDecks();
+    };
+
+    window.toggleDeck = function(di) {
+      const el = document.getElementById(`deck-${di}`);
+      if (el) el.classList.toggle('open');
+    };
+
+    window.sendDeckCard = async function(di, ci) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const card = decks[di]?.cards[ci];
+      if (!card || !card.image_large) { showStatus('No image available', 'error'); return; }
+      const fakeCard = { id: card.id, name: card.name, set: card.set, set_name: card.set_name, image_uris: { small: card.image_small, png: card.image_large, large: card.image_large } };
+      addToRecent(fakeCard);
+      await sendCard(card.image_large, card.name);
+    };
+
+    window.removeDeckCard = function(di, ci) {
+      decks[di].cards.splice(ci, 1);
+      saveDecks();
+      renderDecks();
+      // Re-open the deck that was being edited
+      const el = document.getElementById(`deck-${di}`);
+      if (el) el.classList.add('open');
+    };
+
+    window.renameDeck = function(di) {
+      const name = prompt('New name:', decks[di].name);
+      if (!name || !name.trim()) return;
+      decks[di].name = name.trim();
+      saveDecks();
+      renderDecks();
+      const el = document.getElementById(`deck-${di}`);
+      if (el) el.classList.add('open');
+    };
+
+    window.deleteDeck = function(di) {
+      if (!confirm(`Delete "${decks[di].name}" and all its cards?`)) return;
+      decks.splice(di, 1);
+      saveDecks();
+      renderDecks();
+    };
+
+    // =====================================================
+    // FAVOURITES TAB
+    // =====================================================
+
+    function renderFavourites() {
+      const el = document.getElementById('favouritesList');
+      if (favourites.length === 0) {
+        el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#9733;</div><div class="empty-state-text">No favourites yet.<br>Tap the star on any card to save it here.</div></div>';
+        return;
+      }
+      el.innerHTML = '';
+      favourites.forEach((card, idx) => {
+        const div = document.createElement('div');
+        div.className = 'card-item';
+        div.innerHTML = `
+          <div class="card-main">
+            <img class="card-thumb" src="${card.image_small}" alt="${card.name}">
+            <div class="card-info">
+              <div class="card-name">${card.name}</div>
+              <div class="card-set">${card.set_name} (${card.set.toUpperCase()})</div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="send-btn" onclick="sendStoredCard(${idx}, 'fav')">Send to E-Paper</button>
+            <button class="fav-btn favourited" onclick="removeFavourite(${idx})">&#9733;</button>
+            <button class="deck-add-btn" onclick="addToDeckFromStored(${idx}, 'fav')" title="Add to deck">+D</button>
+          </div>`;
+        el.appendChild(div);
+      });
+    }
+
+    window.removeFavourite = function(idx) {
+      favourites.splice(idx, 1);
+      saveFavourites();
+      renderFavourites();
+      refreshSearchFavStars();
+    };
+
+    // =====================================================
+    // RECENT TAB
+    // =====================================================
+
+    function timeAgo(ts) {
+      const diff = Date.now() - ts;
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'just now';
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs}h ago`;
+      const days = Math.floor(hrs / 24);
+      return `${days}d ago`;
+    }
+
+    function renderRecent() {
+      const el = document.getElementById('recentList');
+      if (recentCards.length === 0) {
+        el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#128344;</div><div class="empty-state-text">No cards sent yet.<br>Send a card and it\'ll appear here.</div></div>';
+        return;
+      }
+      el.innerHTML = '';
+      recentCards.forEach((card, idx) => {
+        const fav = favourites.some(f => f.id === card.id);
+        const div = document.createElement('div');
+        div.className = 'card-item';
+        div.innerHTML = `
+          <div class="card-main">
+            <img class="card-thumb" src="${card.image_small}" alt="${card.name}">
+            <div class="card-info">
+              <div class="card-name">${card.name}</div>
+              <div class="card-set">${card.set_name} (${card.set.toUpperCase()})</div>
+              <div class="recent-time">${timeAgo(card.sentAt)}</div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="send-btn" onclick="sendStoredCard(${idx}, 'recent')">Send to E-Paper</button>
+            <button class="fav-btn ${fav ? 'favourited' : ''}" onclick="toggleFavFromStored(${idx}, 'recent')">&#9733;</button>
+            <button class="deck-add-btn" onclick="addToDeckFromStored(${idx}, 'recent')" title="Add to deck">+D</button>
+          </div>`;
+        el.appendChild(div);
+      });
+    }
+
+    window.toggleFavFromStored = function(idx, source) {
+      const list = source === 'recent' ? recentCards : favourites;
+      const card = list[idx];
+      if (!card) return;
+      toggleFavourite({ id: card.id, name: card.name, set: card.set, set_name: card.set_name, image_uris: { small: card.image_small, png: card.image_large, large: card.image_large } });
+      if (source === 'recent') renderRecent();
+      else renderFavourites();
+      refreshSearchFavStars();
+    };
+
+    window.addToDeckFromStored = function(idx, source) {
+      const list = source === 'fav' ? favourites : recentCards;
+      const card = list[idx];
+      if (!card) return;
+      openDeckPicker({ id: card.id, name: card.name, set: card.set, set_name: card.set_name, image_uris: { small: card.image_small, png: card.image_large, large: card.image_large } });
+    };
+
+    window.sendStoredCard = async function(idx, source) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const list = source === 'fav' ? favourites : recentCards;
+      const card = list[idx];
+      if (!card || !card.image_large) { showStatus('No image available', 'error'); return; }
+      const fakeCard = { id: card.id, name: card.name, set: card.set, set_name: card.set_name, image_uris: { small: card.image_small, png: card.image_large, large: card.image_large } };
+      addToRecent(fakeCard);
+      await sendCard(card.image_large, card.name);
+    };
+
+    // =====================================================
+    // IMAGE PROCESSING
+    // =====================================================
+
+    function convertToGrayscale(imageData) {
+      const d = imageData.data;
+      const out = new Float32Array(imageData.width * imageData.height);
+      for (let i = 0; i < d.length; i += 4) { out[i / 4] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]; }
+      return out;
+    }
+
+    function autoLevels(px) {
+      const hist = new Uint32Array(256);
+      for (let i = 0; i < px.length; i++) { hist[Math.min(255, Math.max(0, Math.round(px[i])))]++; }
+      const total = px.length;
+      let lo = 0, hi = 255, cum = 0;
+      for (let i = 0; i < 256; i++) { cum += hist[i]; if (cum >= total * 0.005) { lo = i; break; } }
+      cum = 0;
+      for (let i = 255; i >= 0; i--) { cum += hist[i]; if (cum >= total * 0.005) { hi = i; break; } }
+      if (hi <= lo) return px;
+      const scale = 255 / (hi - lo);
+      for (let i = 0; i < px.length; i++) { px[i] = Math.max(0, Math.min(255, (px[i] - lo) * scale)); }
+      return px;
+    }
+
+    function sCurveContrast(px, strength) {
+      if (Math.abs(strength - 1.0) < 0.01) return px;
+      const k = strength * 5;
+      const s0 = 1 / (1 + Math.exp(-k * -0.5));
+      const s1 = 1 / (1 + Math.exp(-k * 0.5));
+      const range = s1 - s0;
+      for (let i = 0; i < px.length; i++) { const x = px[i] / 255; const s = 1 / (1 + Math.exp(-k * (x - 0.5))); px[i] = ((s - s0) / range) * 255; }
+      return px;
+    }
+
+    function unsharpMask(px, w, h, amount) {
+      if (amount <= 0) return px;
+      const tmp = new Float32Array(px.length);
+      const blurred = new Float32Array(px.length);
+      for (let y = 0; y < h; y++) { for (let x = 0; x < w; x++) { let sum = 0, n = 0; for (let dx = -1; dx <= 1; dx++) { const nx = x + dx; if (nx >= 0 && nx < w) { sum += px[y * w + nx]; n++; } } tmp[y * w + x] = sum / n; } }
+      for (let y = 0; y < h; y++) { for (let x = 0; x < w; x++) { let sum = 0, n = 0; for (let dy = -1; dy <= 1; dy++) { const ny = y + dy; if (ny >= 0 && ny < h) { sum += tmp[ny * w + x]; n++; } } blurred[y * w + x] = sum / n; } }
+      for (let i = 0; i < px.length; i++) { px[i] = Math.max(0, Math.min(255, px[i] + amount * (px[i] - blurred[i]))); }
+      return px;
+    }
+
+    function atkinsonDither1Bit(px, w, h) {
+      const out = new Float32Array(px);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const i = y * w + x;
+          const old = Math.max(0, Math.min(255, out[i]));
+          const q = old < 128 ? 0 : 255;
+          out[i] = q;
+          const e = (old - q) / 8;
+          if (x + 1 < w) out[i + 1] += e;
+          if (x + 2 < w) out[i + 2] += e;
+          if (y + 1 < h && x - 1 >= 0) out[i + w - 1] += e;
+          if (y + 1 < h) out[i + w] += e;
+          if (y + 1 < h && x + 1 < w) out[i + w + 1] += e;
+          if (y + 2 < h) out[i + 2 * w] += e;
+        }
+      }
+      return out;
+    }
+
+    function processImage(imageData, w, h) {
+      let px = convertToGrayscale(imageData);
+      px = autoLevels(px);
+      px = sCurveContrast(px, 1.3);
+      px = unsharpMask(px, w, h, 0.8);
+      px = atkinsonDither1Bit(px, w, h);
+      return px;
+    }
+
+    function packTo2Bit(px) {
+      const out = new Uint8Array(Math.ceil(px.length / 4));
+      let oi = 0, b = 0, bp = 0;
+      for (let i = 0; i < px.length; i++) {
+        const v = Math.round(px[i]) < 128 ? 3 : 0;
+        b |= (v << (6 - bp));
+        bp += 2;
+        if (bp === 8) { out[oi++] = b; b = 0; bp = 0; }
+      }
+      if (bp > 0) out[oi] = b;
+      return out;
+    }
+
+    // =====================================================
+    // BLE TRANSFER
+    // =====================================================
+
+    const BLE_CHUNK_SIZE = 509;
+
+    async function sendBLE(packed, cardName) {
+      await btCharacteristic.writeValueWithResponse(new Uint8Array([0xAA]));
+      await sleep(50);
+      let sent = 0;
+      const t0 = Date.now();
+      for (let i = 0; i < packed.length; i += BLE_CHUNK_SIZE) {
+        const chunk = packed.slice(i, Math.min(i + BLE_CHUNK_SIZE, packed.length));
+        await btCharacteristic.writeValueWithResponse(chunk);
+        sent += chunk.length;
+        if (sent % (BLE_CHUNK_SIZE * 3) < BLE_CHUNK_SIZE || sent === packed.length) {
+          const pct = Math.round((sent / packed.length) * 100);
+          const elapsed = (Date.now() - t0) / 1000;
+          const rate = sent / elapsed;
+          const eta = rate > 0 ? (packed.length - sent) / rate : 0;
+          showStatus(`Sending ${cardName}...`, 'info', pct, eta);
+        }
+      }
+      await sleep(100);
+      await btCharacteristic.writeValueWithResponse(new Uint8Array([0xBB]));
+      const totalSec = ((Date.now() - t0) / 1000).toFixed(1);
+      const kbps = (packed.length / ((Date.now() - t0) / 1000) / 1024).toFixed(1);
+      showStatus(`${cardName} sent in ${totalSec}s!`, 'success', 100);
+    }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    async function sendCard(imageUrl, cardName) {
+      if (!btCharacteristic) { showStatus('Connect Bluetooth first', 'error'); return; }
+      try {
+        showStatus(`Loading ${cardName}...`, 'info', 0);
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = () => reject(new Error('Image load failed')); img.src = imageUrl; });
         canvas.width = 300;
         canvas.height = 400;
         ctx.drawImage(img, 0, 0, 300, 400);
-        
         const imageData = ctx.getImageData(0, 0, 300, 400);
-        const grayscale = convertToGrayscale(imageData);
-        const dithered = floydSteinbergDither(grayscale, 300, 400);
-        const packed = packTo2Bit(dithered, 300, 400);
-
-        if (packed.length !== 30000) {
-          showStatus(`Error: packed size is ${packed.length}, expected 30000`, 'error');
-          return;
-        }
-
-        showStatus(`Sending ${cardName}...`, 'info', 0);
-
-        // Send start marker
-        await btCharacteristic.writeValueWithResponse(new Uint8Array([0xAA]));
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        // Send image data in smaller chunks with confirmation
-        const chunkSize = 128;
-        let sentBytes = 0;
-        const startTime = Date.now();
-        
-        for (let i = 0; i < packed.length; i += chunkSize) {
-          const chunk = packed.slice(i, Math.min(i + chunkSize, packed.length));
-          
-          await btCharacteristic.writeValueWithResponse(chunk);
-          sentBytes += chunk.length;
-          
-          // Calculate progress and ETA
-          const progress = Math.round((sentBytes / packed.length) * 100);
-          const elapsed = (Date.now() - startTime) / 1000; // seconds
-          const rate = sentBytes / elapsed; // bytes per second
-          const remaining = (packed.length - sentBytes) / rate; // seconds remaining
-          
-          showStatus(`Sending ${cardName}...`, 'info', progress, remaining);
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
-        // Send end marker
-        await btCharacteristic.writeValueWithResponse(new Uint8Array([0xBB]));
-
-        showStatus(`${cardName} sent successfully!`, 'success', 100);
+        showStatus(`Processing ${cardName}...`, 'info', 0);
+        const dithered = processImage(imageData, 300, 400);
+        const packed = packTo2Bit(dithered);
+        if (packed.length !== 30000) { showStatus(`Pack error: ${packed.length} != 30000`, 'error'); return; }
+        await sendBLE(packed, cardName);
       } catch (error) {
-        showStatus('Failed to send: ' + error.message, 'error');
+        showStatus('Error: ' + error.message, 'error');
       }
     }
 
-    function convertToGrayscale(imageData) {
-      const data = imageData.data;
-      const grayscale = new Uint8ClampedArray(imageData.width * imageData.height);
-      
-      for (let i = 0; i < data.length; i += 4) {
-        const r = data[i];
-        const g = data[i + 1];
-        const b = data[i + 2];
-        grayscale[i / 4] = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
-      }
-      
-      return grayscale;
-    }
-
-    function floydSteinbergDither(pixels, width, height) {
-      const output = new Uint8ClampedArray(pixels);
-      
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          const idx = y * width + x;
-          const oldPixel = output[idx];
-          
-          // Quantize to 4 levels
-          let newPixel;
-          if (oldPixel < 64) newPixel = 0;
-          else if (oldPixel < 128) newPixel = 85;
-          else if (oldPixel < 192) newPixel = 170;
-          else newPixel = 255;
-          
-          output[idx] = newPixel;
-          const error = oldPixel - newPixel;
-          
-          // Distribute error
-          if (x + 1 < width) output[idx + 1] += error * 7 / 16;
-          if (x - 1 >= 0 && y + 1 < height) output[idx + width - 1] += error * 3 / 16;
-          if (y + 1 < height) output[idx + width] += error * 5 / 16;
-          if (x + 1 < width && y + 1 < height) output[idx + width + 1] += error * 1 / 16;
-        }
-      }
-      
-      return output;
-    }
-
-    function packTo2Bit(pixels, width, height) {
-      const totalPixels = width * height;
-      const outputSize = Math.ceil(totalPixels / 4);
-      const output = new Uint8Array(outputSize);
-      let outIdx = 0;
-      let currentByte = 0;
-      let bitPos = 0;
-
-      for (let i = 0; i < pixels.length; i++) {
-        const gray = pixels[i];
-        let value;
-        
-        if (gray < 64) value = 3;
-        else if (gray < 128) value = 2;
-        else if (gray < 192) value = 1;
-        else value = 0;
-        
-        currentByte |= (value << (6 - bitPos));
-        bitPos += 2;
-        
-        if (bitPos === 8) {
-          output[outIdx++] = currentByte;
-          currentByte = 0;
-          bitPos = 0;
-        }
-      }
-      
-      if (bitPos > 0) {
-        output[outIdx] = currentByte;
-      }
-      
-      return output;
-    }
+    // =====================================================
+    // STATUS
+    // =====================================================
 
     function showStatus(message, type, progress = 0, timeRemaining = null) {
-      let timeText = '';
+      let extra = '';
       if (timeRemaining !== null && timeRemaining > 0) {
-        const seconds = Math.ceil(timeRemaining);
-        timeText = `<div class="status-time">${seconds}s remaining</div>`;
+        extra = `<div class="status-time">${Math.ceil(timeRemaining)}s remaining</div>`;
       }
-      
-      status.innerHTML = `<div class="status ${type}" style="--progress-width: ${progress}%"><div>${message}${timeText}</div></div>`;
-      
+      statusEl.innerHTML = `<div class="status ${type}" style="--progress-width: ${progress}%"><div>${message}${extra}</div></div>`;
       if (type === 'success' || type === 'error') {
-        setTimeout(() => status.innerHTML = '', 3000);
+        setTimeout(() => { if (statusEl.querySelector(`.${type}`)) statusEl.innerHTML = ''; }, 5000);
       }
     }
   </script>
 
   <script>
-    // Register service worker for PWA
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed'));
-    }
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(() => {}); }
   </script>
 </body>
 </html>
-
