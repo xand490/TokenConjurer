@@ -88,7 +88,6 @@
     .search-btn:hover { opacity: 0.9; }
     .search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* Tabs */
     .tabs {
       display: flex;
       gap: 6px;
@@ -123,7 +122,6 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* Card items */
     .card-item {
       background: #1a1a2e;
       border: 2px solid #333;
@@ -318,7 +316,6 @@
     .empty-state-text { font-size: 14px; }
     .recent-time { font-size: 11px; color: #555; margin-top: 2px; }
 
-    /* Deck styles */
     .deck-item {
       background: #1a1a2e;
       border: 2px solid #333;
@@ -460,7 +457,6 @@
 
     .new-deck-btn:hover { border-color: #10b981; color: #10b981; }
 
-    /* Deck picker modal */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -549,7 +545,6 @@
 
     <div id="status"></div>
 
-    <!-- Tabs -->
     <div class="tabs">
       <button class="tab active" data-tab="search">Search</button>
       <button class="tab" data-tab="decks">Decks <span class="tab-count" id="deckCount"></span></button>
@@ -557,7 +552,6 @@
       <button class="tab" data-tab="recent">Recent <span class="tab-count" id="recentCount"></span></button>
     </div>
 
-    <!-- Search Tab -->
     <div class="tab-content active" id="tab-search">
       <div class="search-box">
         <input type="text" class="search-input" id="searchInput" placeholder="Search for MTG cards...">
@@ -569,23 +563,19 @@
       <div id="results"></div>
     </div>
 
-    <!-- Decks Tab -->
     <div class="tab-content" id="tab-decks">
       <div id="decksList"></div>
     </div>
 
-    <!-- Favourites Tab -->
     <div class="tab-content" id="tab-favourites">
       <div id="favouritesList"></div>
     </div>
 
-    <!-- Recent Tab -->
     <div class="tab-content" id="tab-recent">
       <div id="recentList"></div>
     </div>
   </div>
 
-  <!-- Deck picker modal -->
   <div class="modal-overlay" id="deckModal">
     <div class="modal">
       <div class="modal-title">Add to Deck</div>
@@ -606,10 +596,11 @@
     let cardPreferences = {};
     let favourites = [];
     let recentCards = [];
-    let decks = [];         // [{name, cards: [{name, set, set_name, image_small, image_large, id}]}]
-    let pendingDeckCard = null; // card waiting to be added to a deck
+    let decks = [];
+    let pendingDeckCard = null;
 
     const MAX_RECENT = 20;
+    const IMAGE_PACKED_SIZE = 15000; // 300*400 / 8
 
     const btBtn = document.getElementById('btBtn');
     const searchInput = document.getElementById('searchInput');
@@ -620,7 +611,6 @@
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
-    // Load stored data
     try { const s = localStorage.getItem('mtg_card_preferences'); if (s) cardPreferences = JSON.parse(s); } catch (e) {}
     try { const s = localStorage.getItem('mtg_favourites'); if (s) favourites = JSON.parse(s); } catch (e) {}
     try { const s = localStorage.getItem('mtg_recent'); if (s) recentCards = JSON.parse(s); } catch (e) {}
@@ -633,7 +623,6 @@
     function updateTabCounts() {
       document.getElementById('favCount').textContent = favourites.length > 0 ? `(${favourites.length})` : '';
       document.getElementById('recentCount').textContent = recentCards.length > 0 ? `(${recentCards.length})` : '';
-      const totalDeckCards = decks.reduce((s, d) => s + d.cards.length, 0);
       document.getElementById('deckCount').textContent = decks.length > 0 ? `(${decks.length})` : '';
     }
     updateTabCounts();
@@ -992,7 +981,6 @@
       decks[di].cards.splice(ci, 1);
       saveDecks();
       renderDecks();
-      // Re-open the deck that was being edited
       const el = document.getElementById(`deck-${di}`);
       if (el) el.classList.add('open');
     };
@@ -1197,16 +1185,19 @@
       return px;
     }
 
-    function packTo2Bit(px) {
-      const out = new Uint8Array(Math.ceil(px.length / 4));
-      let oi = 0, b = 0, bp = 0;
-      for (let i = 0; i < px.length; i++) {
-        const v = Math.round(px[i]) < 128 ? 3 : 0;
-        b |= (v << (6 - bp));
-        bp += 2;
-        if (bp === 8) { out[oi++] = b; b = 0; bp = 0; }
+    // v3: 1-bit packing — 8 pixels per byte, MSB first, linear order
+    // bit 1 = black, bit 0 = white
+    // 300*400 = 120000 pixels / 8 = 15000 bytes exactly
+    function packTo1Bit(px) {
+      const totalPixels = px.length; // should be 120000
+      const out = new Uint8Array(Math.ceil(totalPixels / 8));
+      for (let i = 0; i < totalPixels; i++) {
+        if (Math.round(px[i]) < 128) {
+          // dark pixel = bit 1 (black)
+          out[i >> 3] |= (1 << (7 - (i & 7)));
+        }
+        // light pixel = bit 0 (white), already 0 by default
       }
-      if (bp > 0) out[oi] = b;
       return out;
     }
 
@@ -1215,17 +1206,31 @@
     // =====================================================
 
     const BLE_CHUNK_SIZE = 509;
+    const BURST_SIZE = 5; // packets without response before a sync
 
     async function sendBLE(packed, cardName) {
       await btCharacteristic.writeValueWithResponse(new Uint8Array([0xAA]));
       await sleep(50);
+
       let sent = 0;
+      let packetNum = 0;
       const t0 = Date.now();
+      const totalPackets = Math.ceil(packed.length / BLE_CHUNK_SIZE);
+
       for (let i = 0; i < packed.length; i += BLE_CHUNK_SIZE) {
         const chunk = packed.slice(i, Math.min(i + BLE_CHUNK_SIZE, packed.length));
-        await btCharacteristic.writeValueWithResponse(chunk);
+        packetNum++;
+
+        // Every BURST_SIZE packets (or the last packet), use writeWithResponse as sync barrier
+        if (packetNum % BURST_SIZE === 0 || i + BLE_CHUNK_SIZE >= packed.length) {
+          await btCharacteristic.writeValueWithResponse(chunk);
+        } else {
+          await btCharacteristic.writeValueWithoutResponse(chunk);
+        }
+
         sent += chunk.length;
-        if (sent % (BLE_CHUNK_SIZE * 3) < BLE_CHUNK_SIZE || sent === packed.length) {
+
+        if (packetNum % 3 === 0 || sent === packed.length) {
           const pct = Math.round((sent / packed.length) * 100);
           const elapsed = (Date.now() - t0) / 1000;
           const rate = sent / elapsed;
@@ -1233,11 +1238,13 @@
           showStatus(`Sending ${cardName}...`, 'info', pct, eta);
         }
       }
+
       await sleep(100);
       await btCharacteristic.writeValueWithResponse(new Uint8Array([0xBB]));
+
       const totalSec = ((Date.now() - t0) / 1000).toFixed(1);
       const kbps = (packed.length / ((Date.now() - t0) / 1000) / 1024).toFixed(1);
-      showStatus(`${cardName} sent in ${totalSec}s!`, 'success', 100);
+      showStatus(`${cardName} sent in ${totalSec}s (${kbps} KB/s)!`, 'success', 100);
     }
 
     function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
@@ -1255,8 +1262,8 @@
         const imageData = ctx.getImageData(0, 0, 300, 400);
         showStatus(`Processing ${cardName}...`, 'info', 0);
         const dithered = processImage(imageData, 300, 400);
-        const packed = packTo2Bit(dithered);
-        if (packed.length !== 30000) { showStatus(`Pack error: ${packed.length} != 30000`, 'error'); return; }
+        const packed = packTo1Bit(dithered);
+        if (packed.length !== IMAGE_PACKED_SIZE) { showStatus(`Pack error: ${packed.length} != ${IMAGE_PACKED_SIZE}`, 'error'); return; }
         await sendBLE(packed, cardName);
       } catch (error) {
         showStatus('Error: ' + error.message, 'error');
