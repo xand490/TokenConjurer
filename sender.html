@@ -965,8 +965,9 @@
           <select id="dsMode" style="width:100%; padding:8px; border-radius:8px; background:#0f1626; color:#fff; border:1px solid #333; margin-top:4px;">
             <option value="fullbleed">Full bleed (fills frame)</option>
             <option value="fill-blur">True size + blur fill</option>
+            <option value="fill-mirror">True size + mirror fill</option>
             <option value="fill-black">True size + black fill</option>
-            <option value="fill-white">True size + white fill</option>
+            <option value="fill-white">True size + blank (panel white)</option>
             <option value="smart">Smart stretch</option>
             <option value="plain">Plain stretch</option>
           </select>
@@ -980,8 +981,20 @@
         <label style="display:block; margin-bottom:6px;">Gamma <span id="dsGammaV"></span>
           <input type="range" id="dsGamma" min="0.5" max="2.2" step="0.05" style="width:100%;">
         </label>
+        <label style="display:block; margin-bottom:6px;">Top trim <span id="dsTtrimV"></span>%
+          <input type="range" id="dsTtrim" min="0" max="12" step="0.5" style="width:100%;">
+        </label>
+        <label style="display:block; margin-bottom:6px;">Brightness <span id="dsBrightV"></span>
+          <input type="range" id="dsBright" min="-60" max="60" step="2" style="width:100%;">
+        </label>
         <label style="display:block; margin-bottom:6px;">Contrast <span id="dsContrastV"></span>
           <input type="range" id="dsContrast" min="-50" max="50" step="2" style="width:100%;">
+        </label>
+        <label style="display:block; margin-bottom:8px;">Dither
+          <select id="dsDither" style="width:100%; padding:8px; border-radius:8px; background:#0f1626; color:#fff; border:1px solid #333; margin-top:4px;">
+            <option value="fs">Floyd-Steinberg</option>
+            <option value="none">None (nearest level)</option>
+          </select>
         </label>
       </div>
       <button class="menu-close" id="menuClose">Close</button>
@@ -1934,6 +1947,19 @@
         x.filter = 'none';
         if (cardH <= EPD_H) x.drawImage(card, 0, y0, EPD_W, cardH);
         else { const s2 = EPD_H / card.height, w2 = card.width * s2; x.drawImage(card, (EPD_W - w2) / 2, 0, w2, EPD_H); }
+      } else if (mode === 'fill-mirror') {
+        if (cardH <= EPD_H) {
+          x.drawImage(card, 0, y0, EPD_W, cardH);
+          if (y0 > 0) {
+            x.save(); x.translate(0, y0); x.scale(1, -1);
+            x.drawImage(card, 0, 0, card.width, card.height * (y0 / cardH), 0, 0, EPD_W, y0);
+            x.restore();
+            x.save(); x.translate(0, y0 + cardH); x.scale(1, -1);
+            const srcStrip = card.height * (y0 / cardH);
+            x.drawImage(card, 0, card.height - srcStrip, card.width, srcStrip, 0, -(EPD_H - (y0 + cardH)), EPD_W, EPD_H - (y0 + cardH));
+            x.restore();
+          }
+        } else { const s2 = EPD_H / card.height, w2 = card.width * s2; x.fillStyle = '#fff'; x.fillRect(0, 0, EPD_W, EPD_H); x.drawImage(card, (EPD_W - w2) / 2, 0, w2, EPD_H); }
       } else if (mode === 'fill-black' || mode === 'fill-white') {
         x.fillStyle = mode === 'fill-black' ? '#000' : '#fff';
         x.fillRect(0, 0, EPD_W, EPD_H);
@@ -2097,8 +2123,11 @@
       bind('dsMode', 'mode', false);
       bind('dsBtrim', 'btrim', true);
       bind('dsStrim', 'strim', true);
+      bind('dsTtrim', 'ttrim', true);
       bind('dsGamma', 'gamma', true);
+      bind('dsBright', 'bright', true);
       bind('dsContrast', 'contrast', true);
+      bind('dsDither', 'dither', false);
     })();
   </script>
 
