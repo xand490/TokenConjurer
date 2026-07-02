@@ -2041,36 +2041,55 @@
 
     async function writeCtrl(s) { await ctrlChar.writeValue(new TextEncoder().encode(s)); }
 
+    function withTimeout(p, ms, what) {
+      return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(what + ' timed out')), ms))]);
+    }
+
+    let sendInProgress = false;
+
     async function sendBLE(packed, cardName) {
-      ackBase = 0;
-      const rdy = bleWaitFor('RDY', 5000);
-      await writeCtrl('BEGIN ' + packed.length);
-      await rdy;
+      if (sendInProgress) { showStatus('A send is already in progress', 'error'); return; }
+      sendInProgress = true;
+      try {
+        ackBase = 0;
+        const rdy = bleWaitFor('RDY', 5000);
+        await withTimeout(writeCtrl('BEGIN ' + packed.length), 5000, 'BEGIN write');
+        await rdy;
 
-      const CHUNK = 244, WINDOW = 12288;
-      const canNR = !!dataChar.writeValueWithoutResponse;
-      const t0 = Date.now();
+        const CHUNK = 244, WINDOW = 12288, STALL_MS = 10000;
+        const canNR = !!dataChar.writeValueWithoutResponse;
+        const t0 = Date.now();
 
-      for (let off = 0; off < packed.length; off += CHUNK) {
-        while (off - ackBase > WINDOW) { await bleWaitFor('A:', 8000); }
-        const slice = packed.slice(off, Math.min(off + CHUNK, packed.length));
-        if (canNR) await dataChar.writeValueWithoutResponse(slice);
-        else await dataChar.writeValue(slice);
-        if ((off / CHUNK) % 8 === 0) {
-          const pct = Math.round(off / packed.length * 100);
-          const elapsed = (Date.now() - t0) / 1000;
-          const rate = off / Math.max(0.001, elapsed);
-          const eta = rate > 0 ? (packed.length - off) / rate : 0;
-          showStatus(`Sending ${cardName}...`, 'info', pct, eta);
+        for (let off = 0; off < packed.length; off += CHUNK) {
+          // poll the ack counter - immune to missed notification races
+          const stallStart = Date.now();
+          while (off - ackBase > WINDOW) {
+            await sleep(30);
+            if (Date.now() - stallStart > STALL_MS) {
+              throw new Error('Dock stopped responding at ' + Math.round(off / packed.length * 100) + '%');
+            }
+          }
+          const slice = packed.slice(off, Math.min(off + CHUNK, packed.length));
+          if (canNR) await withTimeout(dataChar.writeValueWithoutResponse(slice), 5000, 'BLE write');
+          else await withTimeout(dataChar.writeValue(slice), 5000, 'BLE write');
+          if ((off / CHUNK) % 8 === 0) {
+            const pct = Math.round(off / packed.length * 100);
+            const elapsed = (Date.now() - t0) / 1000;
+            const rate = off / Math.max(0.001, elapsed);
+            const eta = rate > 0 ? (packed.length - off) / rate : 0;
+            showStatus(`Sending ${cardName}...`, 'info', pct, eta);
+          }
         }
+        const ok = bleWaitFor('OK', 8000);
+        await withTimeout(writeCtrl('END'), 5000, 'END write');
+        await ok;
+        showStatus(`${cardName} sent - dock is drawing...`, 'info', 100);
+        await bleWaitFor('DONE', 60000);
+        const totalSec = ((Date.now() - t0) / 1000).toFixed(1);
+        showStatus(`${cardName} displayed! (${totalSec}s transfer)`, 'success', 100);
+      } finally {
+        sendInProgress = false;
       }
-      const ok = bleWaitFor('OK', 8000);
-      await writeCtrl('END');
-      await ok;
-      showStatus(`${cardName} sent - dock is drawing...`, 'info', 100);
-      await bleWaitFor('DONE', 60000);
-      const totalSec = ((Date.now() - t0) / 1000).toFixed(1);
-      showStatus(`${cardName} displayed! (${totalSec}s transfer)`, 'success', 100);
     }
 
     function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
