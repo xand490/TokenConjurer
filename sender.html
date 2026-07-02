@@ -1,450 +1,2109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Token Conjurer - Dock Sender</title>
-<style>
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family: -apple-system, Segoe UI, Roboto, sans-serif; background:#1a1a2e; color:#eee; padding:20px; }
-  .wrap { max-width:1100px; margin:0 auto; }
-  h1 { font-size:22px; margin-bottom:4px; background:linear-gradient(135deg,#8b5cf6,#ec4899); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-  p.sub { color:#999; font-size:13px; margin-bottom:16px; }
-  .row { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:16px; }
-  .panel { background:#16213e; border-radius:10px; padding:16px; flex:1; min-width:300px; }
-  .panel h2 { font-size:14px; color:#8b5cf6; margin-bottom:10px; text-transform:uppercase; letter-spacing:1px; }
-  input[type=text] { width:100%; padding:10px; border-radius:8px; border:1px solid #333; background:#0f1626; color:#fff; font-size:14px; margin-bottom:8px; }
-  button { padding:10px 16px; border:none; border-radius:8px; background:#8b5cf6; color:#fff; font-weight:600; cursor:pointer; font-size:14px; }
-  button:hover { background:#7c4dea; }
-  button:disabled { opacity:.4; cursor:not-allowed; }
-  .drop { border:2px dashed #444; border-radius:10px; padding:26px; text-align:center; color:#888; cursor:pointer; }
-  .drop.hover { border-color:#8b5cf6; color:#8b5cf6; }
-  canvas { border-radius:6px; max-width:100%; height:auto; background:#fff; }
-  .canvases { display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; }
-  .canvases figure { text-align:center; }
-  .canvases figcaption { font-size:12px; color:#888; margin-top:6px; }
-  #status { font-size:13px; color:#4ade80; min-height:18px; margin:8px 0; }
-  .opts { display:flex; gap:16px; align-items:center; margin-bottom:10px; flex-wrap:wrap; font-size:13px; }
-  select { padding:6px 10px; border-radius:6px; background:#0f1626; color:#fff; border:1px solid #333; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1a1a2e">
+  <meta name="description" content="Token Conjurer">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==">
+  <title>Token Conjurer</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .container { max-width: 600px; margin: 0 auto; }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #333;
+    }
+
+    h1 {
+      font-size: 24px;
+      background: linear-gradient(135deg, #8b5cf6, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .bt-btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      background: #333;
+      color: white;
+      transition: all 0.3s;
+      font-size: 14px;
+    }
+
+    .bt-btn.connected { background: #10b981; }
+    .bt-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .search-box {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .search-buttons { display: flex; gap: 8px; }
+
+    .search-input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: #1a1a2e;
+      color: white;
+      font-size: 16px;
+    }
+
+    .search-btn {
+      flex: 1;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      background: #8b5cf6;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .search-btn.token { background: #ec4899; }
+    .search-btn:hover { opacity: 0.9; }
+    .search-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 12px 4px;
+      border: 2px solid #333;
+      border-radius: 10px;
+      background: #1a1a2e;
+      color: #888;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .tab:hover { border-color: #555; color: #ccc; }
+    .tab.active { border-color: #8b5cf6; color: #fff; background: rgba(139, 92, 246, 0.15); }
+    .tab .tab-count {
+      display: block;
+      font-size: 11px;
+      color: #555;
+      margin-top: 2px;
+      font-weight: 400;
+    }
+    .tab.active .tab-count { color: #a78bfa; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    .card-item {
+      background: #1a1a2e;
+      border: 2px solid #333;
+      border-radius: 12px;
+      padding: 12px;
+      transition: all 0.3s;
+      margin-bottom: 12px;
+    }
+
+    .card-item:hover { border-color: #8b5cf6; }
+
+    .card-main {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .card-thumb {
+      width: 60px;
+      height: 84px;
+      border-radius: 6px;
+      object-fit: cover;
+    }
+
+    .card-info { flex: 1; min-width: 0; }
+
+    .card-name {
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 4px;
+      word-wrap: break-word;
+    }
+
+    .card-set { font-size: 12px; color: #888; }
+
+    .preferred-badge {
+      display: inline-block;
+      background: #10b981;
+      color: white;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 8px;
+    }
+
+    .version-toggle {
+      color: #8b5cf6;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: underline;
+      margin-top: 8px;
+      display: inline-block;
+    }
+
+    .version-toggle:hover { color: #a78bfa; }
+
+    .version-selector {
+      display: none;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #333;
+    }
+
+    .version-selector.open { display: flex; }
+
+    .version-btn {
+      padding: 6px 12px;
+      border: 1px solid #555;
+      border-radius: 6px;
+      background: #2a2a3e;
+      color: white;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .version-btn:hover { border-color: #8b5cf6; background: #3a3a4e; }
+    .version-btn.selected { border-color: #8b5cf6; background: #8b5cf6; }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .send-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      background: #8b5cf6;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .send-btn:hover { background: #7c3aed; }
+    .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .fav-btn {
+      padding: 10px 14px;
+      border: 2px solid #333;
+      border-radius: 6px;
+      background: none;
+      color: #666;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+
+    .fav-btn:hover { border-color: #f59e0b; color: #f59e0b; }
+    .fav-btn.favourited { border-color: #f59e0b; color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
+
+    .deck-add-btn {
+      padding: 10px 14px;
+      border: 2px solid #333;
+      border-radius: 6px;
+      background: none;
+      color: #666;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+
+    .deck-add-btn:hover { border-color: #10b981; color: #10b981; }
+
+    .remove-btn {
+      padding: 10px 14px;
+      border: 2px solid #333;
+      border-radius: 6px;
+      background: none;
+      color: #666;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .remove-btn:hover { border-color: #ef4444; color: #ef4444; }
+
+    .loading { text-align: center; padding: 40px; color: #888; }
+
+    .spinner {
+      border: 3px solid #333;
+      border-top-color: #8b5cf6;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .status {
+      text-align: center;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      background: #1a1a2e;
+      border: 2px solid #333;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .status::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      height: 100%;
+      width: var(--progress-width, 0%);
+      background: rgba(16, 185, 129, 0.3);
+      transition: width 0.3s ease;
+      z-index: 0;
+    }
+
+    .status > div { position: relative; z-index: 1; }
+    .status-time { font-size: 12px; color: #ffffff; margin-top: 4px; opacity: 0.8; }
+    .status.success { border-color: #10b981; color: #10b981; }
+    .status.error { border-color: #ef4444; color: #ef4444; }
+    .status.info { border-color: #8b5cf6; color: #8b5cf6; }
+
+    canvas.hidden { display: none; }
+
+    .empty-state { text-align: center; padding: 40px 20px; color: #555; }
+
+    .empty-state-text { font-size: 14px; }
+    .recent-time { font-size: 11px; color: #555; margin-top: 2px; }
+
+    .deck-item {
+      background: #1a1a2e;
+      border: 2px solid #333;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .deck-item:hover { border-color: #444; }
+
+    .deck-header {
+      display: flex;
+      align-items: center;
+      padding: 14px;
+      cursor: pointer;
+      gap: 12px;
+    }
+
+    .deck-header-info { flex: 1; }
+
+    .deck-header-name {
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .deck-header-count {
+      font-size: 12px;
+      color: #888;
+      margin-top: 2px;
+    }
+
+    .deck-header-arrow {
+      color: #555;
+      font-size: 14px;
+      transition: transform 0.2s;
+    }
+
+    .deck-item.open .deck-header-arrow { transform: rotate(90deg); }
+    .deck-item.open { border-color: #8b5cf6; }
+
+    .deck-cards {
+      display: none;
+      padding: 0 14px 14px;
+      border-top: 1px solid #333;
+    }
+
+    .deck-item.open .deck-cards { display: block; }
+
+    .deck-card-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #2a2a3e;
+    }
+
+    .deck-card-row:last-child { border-bottom: none; }
+
+    .deck-card-thumb {
+      width: 40px;
+      height: 56px;
+      border-radius: 4px;
+      object-fit: cover;
+    }
+
+    .deck-card-info { flex: 1; min-width: 0; }
+
+    .deck-card-name {
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .deck-card-set { font-size: 11px; color: #666; }
+
+    .deck-card-actions { display: flex; gap: 6px; }
+
+    .deck-card-send {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 5px;
+      background: #8b5cf6;
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .deck-card-send:hover { background: #7c3aed; }
+
+    .deck-card-remove {
+      padding: 6px 8px;
+      border: 1px solid #444;
+      border-radius: 5px;
+      background: none;
+      color: #666;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .deck-card-remove:hover { border-color: #ef4444; color: #ef4444; }
+
+    .deck-actions {
+      display: flex;
+      gap: 8px;
+      padding: 10px 14px;
+      border-top: 1px solid #2a2a3e;
+    }
+
+    .deck-rename-btn, .deck-delete-btn {
+      padding: 6px 12px;
+      border: 1px solid #444;
+      border-radius: 5px;
+      background: none;
+      color: #888;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .deck-rename-btn:hover { border-color: #8b5cf6; color: #8b5cf6; }
+    .deck-delete-btn:hover { border-color: #ef4444; color: #ef4444; }
+
+    .new-deck-btn {
+      width: 100%;
+      padding: 14px;
+      border: 2px dashed #444;
+      border-radius: 12px;
+      background: none;
+      color: #888;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 12px;
+    }
+
+    .new-deck-btn:hover { border-color: #10b981; color: #10b981; }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #1a1a2e;
+      border: 2px solid #8b5cf6;
+      border-radius: 16px;
+      padding: 20px;
+      width: 100%;
+      max-width: 400px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .modal-deck-btn {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: #2a2a3e;
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      margin-bottom: 8px;
+      text-align: left;
+      transition: all 0.2s;
+    }
+
+    .modal-deck-btn:hover { border-color: #8b5cf6; }
+
+    .modal-deck-count { font-size: 12px; color: #888; margin-left: 8px; }
+
+    .modal-new-deck {
+      width: 100%;
+      padding: 12px;
+      border: 2px dashed #444;
+      border-radius: 8px;
+      background: none;
+      color: #10b981;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-bottom: 8px;
+    }
+
+    .modal-new-deck:hover { border-color: #10b981; }
+
+    .modal-cancel {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #333;
+      color: #888;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .modal-cancel:hover { background: #444; color: #fff; }
+
+    /* HAMBURGER MENU */
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+
+    .menu-btn {
+      width: 36px;
+      height: 36px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: none;
+      color: #888;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .menu-btn:hover { border-color: #555; color: #ccc; }
+    .menu-btn.open { border-color: #8b5cf6; color: #fff; }
+
+    .format-badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+      background: rgba(236, 72, 153, 0.15);
+      color: #ec4899;
+      border: 1px solid rgba(236, 72, 153, 0.3);
+      display: none;
+      white-space: nowrap;
+    }
+
+    .format-badge.visible { display: inline-block; }
+
+    .menu-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+    }
+
+    .menu-overlay.open { display: block; }
+
+    .menu-drawer {
+      position: fixed;
+      top: 0; left: -280px;
+      width: 280px;
+      height: 100%;
+      background: #1a1a2e;
+      border-right: 2px solid #333;
+      z-index: 201;
+      transition: left 0.3s ease;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .menu-overlay.open .menu-drawer { left: 0; }
+
+    .menu-title {
+      font-size: 13px;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      margin-top: 20px;
+    }
+
+    .menu-title:first-child { margin-top: 0; }
+
+    .menu-option {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #333;
+      border-radius: 10px;
+      background: #2a2a3e;
+      color: #ccc;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .menu-option:hover { border-color: #555; color: #fff; }
+
+    .menu-option.active {
+      border-color: #8b5cf6;
+      background: rgba(139, 92, 246, 0.12);
+      color: #fff;
+    }
+
+    .menu-option .menu-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid #555;
+      flex-shrink: 0;
+    }
+
+    .menu-option.active .menu-dot {
+      background: #8b5cf6;
+      border-color: #8b5cf6;
+    }
+
+    .menu-option-label { flex: 1; }
+
+    .menu-option-sub {
+      font-size: 11px;
+      color: #666;
+      display: block;
+      margin-top: 2px;
+    }
+
+    .menu-option.active .menu-option-sub { color: #a78bfa; }
+
+    .menu-close {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #333;
+      color: #888;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    .menu-close:hover { background: #444; color: #fff; }
+
+    /* PLANECHASE GAME PANEL */
+    .pc-game-panel {
+      background: linear-gradient(135deg, rgba(236,72,153,0.08), rgba(139,92,246,0.08));
+      border: 2px solid rgba(236,72,153,0.3);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .pc-game-panel.visible { display: block; }
+
+    .pc-game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .pc-game-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ec4899;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .pc-game-stop {
+      padding: 5px 12px;
+      border: 1px solid rgba(239,68,68,0.4);
+      border-radius: 6px;
+      background: rgba(239,68,68,0.1);
+      color: #ef4444;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pc-game-stop:hover { background: rgba(239,68,68,0.2); border-color: #ef4444; }
+
+    .pc-current-plane {
+      background: rgba(0,0,0,0.25);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .pc-current-thumb {
+      width: 56px;
+      height: 78px;
+      border-radius: 6px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .pc-current-info { flex: 1; min-width: 0; }
+
+    .pc-current-name {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 2px;
+      word-wrap: break-word;
+    }
+
+    .pc-current-meta {
+      font-size: 12px;
+      color: #888;
+    }
+
+    .pc-position {
+      font-size: 11px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .pc-game-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .pc-planeswalk-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #ec4899, #8b5cf6);
+      color: white;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pc-planeswalk-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .pc-planeswalk-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .pc-resend-btn {
+      padding: 12px 16px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: none;
+      color: #888;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pc-resend-btn:hover { border-color: #8b5cf6; color: #8b5cf6; }
+
+    /* Planechase start game in decks */
+    .deck-play-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 5px;
+      background: linear-gradient(135deg, #ec4899, #8b5cf6);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .deck-play-btn:hover { opacity: 0.9; }
+
+    /* IMAGE ZOOM OVERLAY */
+    .zoom-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      cursor: pointer;
+    }
+
+    .zoom-overlay.open { display: flex; }
+
+    .zoom-overlay img {
+      max-width: 100%;
+      max-height: 90vh;
+      border-radius: 12px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+    }
+
+    .card-thumb, .deck-card-thumb, .pc-current-thumb { cursor: pointer; }
+
+    /* Planechase thumbnails: rotate portrait source images to landscape */
+    .pc-mode .card-thumb {
+      width: 72px;
+      height: 100px;
+      transform: rotate(90deg);
+      margin: -14px 14px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+
+    .pc-mode .deck-card-thumb {
+      width: 52px;
+      height: 72px;
+      transform: rotate(90deg);
+      margin: -10px 10px;
+      object-fit: cover;
+      border-radius: 3px;
+    }
+
+    .pc-mode .pc-current-thumb {
+      width: 78px;
+      height: 110px;
+      transform: rotate(90deg);
+      margin: -16px 16px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+
+    .zoom-overlay.pc-rotate img {
+      transform: rotate(90deg);
+      max-width: 90vh;
+      max-height: 100vw;
+    }
+
+    .pw-icon {
+      display: inline-block;
+      width: 0.75em;
+      height: 1em;
+      vertical-align: -0.15em;
+      background: currentColor;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 860 1582%27%3E%3Cg transform=%27translate(0,1582) scale(0.1,-0.1)%27%3E%3Cpath d=%27M4282 15353c-29-145-64-577-97-1163-140-2509-268-3722-480-4558-66-260-85-312-109-312-29 0-360-28-422-36l-51-6-21 74c-148 511-267 1435-472 3688-61 675-86 915-96 960-6 24-6 25-14 4-15-38-57-415-135-1186-90-900-131-1277-191-1753-118-943-237-1586-356-1939l-33-97-160-53c-88-30-188-65-222-80-34-14-64-26-67-26-7 0-61 147-95 256-143 466-242 1048-396 2319-63 518-86 684-116 829-21 104-33 132-43 100-49-160-175-1446-321-3274-73-923-84-1065-77-1071 4-3 65-29 137-59 268-110 586-278 845-448 1092-712 1945-1852 2414-3220 264-771 416-1560 511-2657 41-481 54-565 86-565 27 0 45 122 84 570 103 1192 280 2052 598 2895 142 377 359 813 585 1175 483 772 1126 1424 1842 1867 262 162 515 291 780 398 52 21 98 41 102 44 3 3-5 143-18 311-205 2624-348 4092-394 4043-12-12-46-181-69-338-11-77-50-381-86-675-133-1088-214-1586-330-2035-47-181-139-465-151-465-2 0-38 14-81 31-43 17-143 53-223 80l-145 48-18 48c-59 153-150 539-216 918-113 644-204 1385-351 2855-96 963-124 1189-140 1159-12-21-42-316-115-1119-188-2060-307-2990-447-3498l-31-114-51 6c-63 8-393 36-423 36-25 0-40 44-108 315-208 821-334 1987-465 4280-59 1040-95 1454-128 1487-6 6-14-14-20-49z%27/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;
+      mask: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 860 1582%27%3E%3Cg transform=%27translate(0,1582) scale(0.1,-0.1)%27%3E%3Cpath d=%27M4282 15353c-29-145-64-577-97-1163-140-2509-268-3722-480-4558-66-260-85-312-109-312-29 0-360-28-422-36l-51-6-21 74c-148 511-267 1435-472 3688-61 675-86 915-96 960-6 24-6 25-14 4-15-38-57-415-135-1186-90-900-131-1277-191-1753-118-943-237-1586-356-1939l-33-97-160-53c-88-30-188-65-222-80-34-14-64-26-67-26-7 0-61 147-95 256-143 466-242 1048-396 2319-63 518-86 684-116 829-21 104-33 132-43 100-49-160-175-1446-321-3274-73-923-84-1065-77-1071 4-3 65-29 137-59 268-110 586-278 845-448 1092-712 1945-1852 2414-3220 264-771 416-1560 511-2657 41-481 54-565 86-565 27 0 45 122 84 570 103 1192 280 2052 598 2895 142 377 359 813 585 1175 483 772 1126 1424 1842 1867 262 162 515 291 780 398 52 21 98 41 102 44 3 3-5 143-18 311-205 2624-348 4092-394 4043-12-12-46-181-69-338-11-77-50-381-86-675-133-1088-214-1586-330-2035-47-181-139-465-151-465-2 0-38 14-81 31-43 17-143 53-223 80l-145 48-18 48c-59 153-150 539-216 918-113 644-204 1385-351 2855-96 963-124 1189-140 1159-12-21-42-316-115-1119-188-2060-307-2990-447-3498l-31-114-51 6c-63 8-393 36-423 36-25 0-40 44-108 315-208 821-334 1987-465 4280-59 1040-95 1454-128 1487-6 6-14-14-20-49z%27/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;
+    }
+  </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Token Conjurer - Dock Sender</h1>
-  <p class="sub">Convert a card, connect to the dock over Bluetooth, send. Serve this page over HTTPS (e.g. GitHub Pages) for Bluetooth to work.</p>
-
-  <div class="row">
-    <div class="panel">
-      <h2>1. Get a card</h2>
-      <input type="text" id="cardName" placeholder="Card name e.g. Sol Ring" value="Sol Ring">
-      <button id="fetchBtn">Fetch from Scryfall</button>
-      <p style="margin:10px 0; color:#666; font-size:12px;">or drop / choose a local image:</p>
-      <div class="drop" id="drop">Drop image here or click to browse</div>
-      <input type="file" id="file" accept="image/*" style="display:none">
+  <div class="container">
+    <div class="header">
+      <div class="header-left">
+        <button class="menu-btn" id="menuBtn" title="Format">&#9776;</button>
+        <h1>Token Conjurer</h1>
+        <span class="format-badge" id="formatBadge">Planechase</span>
+      </div>
+      <div class="header-right">
+        <button class="bt-btn" id="btBtn">Connect BT</button>
+      </div>
     </div>
-    <div class="panel">
-      <h2>2. Options</h2>
-      <div class="opts">
-        <label>Mode:
-          <select id="mode">
-            <option value="fullbleed" selected>Full bleed (auto-crop to fill)</option>
+
+    <div id="status"></div>
+
+    <!-- Planechase Game Panel (shown during active game) -->
+    <div class="pc-game-panel" id="pcGamePanel">
+      <div class="pc-game-header">
+        <div class="pc-game-title"><span class="pw-icon"></span> Planechase</div>
+        <button class="pc-game-stop" id="pcStopBtn">End Game</button>
+      </div>
+      <div class="pc-current-plane" id="pcCurrentPlane">
+        <img class="pc-current-thumb" id="pcPlaneThumb" src="" alt="" onclick="zoomCard(this.src)">
+        <div class="pc-current-info">
+          <div class="pc-current-name" id="pcPlaneName">—</div>
+          <div class="pc-current-meta" id="pcPlaneMeta"></div>
+          <div class="pc-position" id="pcPosition"></div>
+        </div>
+      </div>
+      <div class="pc-game-actions">
+        <button class="pc-planeswalk-btn" id="pcPlaneswalkBtn"><span class="pw-icon"></span> Planeswalk</button>
+        <button class="pc-resend-btn" id="pcResendBtn">Resend</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="search">Search</button>
+      <button class="tab" data-tab="decks">Decks <span class="tab-count" id="deckCount"></span></button>
+      <button class="tab" data-tab="favourites">Favs <span class="tab-count" id="favCount"></span></button>
+      <button class="tab" data-tab="recent">Recent <span class="tab-count" id="recentCount"></span></button>
+    </div>
+
+    <div class="tab-content active" id="tab-search">
+      <div class="search-box">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search for MTG cards...">
+        <div class="search-buttons">
+          <button class="search-btn" id="searchBtn">Search Cards</button>
+          <button class="search-btn token" id="tokenBtn">Search Tokens</button>
+          <button class="search-btn token" id="listAllBtn" style="display:none;">List All</button>
+        </div>
+      </div>
+      <div id="results"></div>
+    </div>
+
+    <div class="tab-content" id="tab-decks">
+      <div id="decksList"></div>
+    </div>
+
+    <div class="tab-content" id="tab-favourites">
+      <div id="favouritesList"></div>
+    </div>
+
+    <div class="tab-content" id="tab-recent">
+      <div id="recentList"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="deckModal">
+    <div class="modal">
+      <div class="modal-title">Add to Deck</div>
+      <div id="deckModalList"></div>
+      <button class="modal-new-deck" id="modalNewDeck">+ New Deck</button>
+      <button class="modal-cancel" id="modalCancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Format Menu Drawer -->
+  <div class="menu-overlay" id="menuOverlay">
+    <div class="menu-drawer">
+      <div class="menu-title">Game Format</div>
+      <button class="menu-option active" data-format="mtg_standard">
+        <span class="menu-dot"></span>
+        <span class="menu-option-label">MTG<span class="menu-option-sub">Standard card search &amp; decks</span></span>
+      </button>
+      <button class="menu-option" data-format="mtg_planechase">
+        <span class="menu-dot"></span>
+        <span class="menu-option-label">MTG — Planechase<span class="menu-option-sub">Build &amp; play Planechase decks</span></span>
+      </button>
+      <div class="menu-title" style="margin-top:18px;">Display Settings</div>
+      <div style="padding:0 4px; font-size:13px;">
+        <label style="display:block; margin-bottom:8px;">Mode
+          <select id="dsMode" style="width:100%; padding:8px; border-radius:8px; background:#0f1626; color:#fff; border:1px solid #333; margin-top:4px;">
+            <option value="fullbleed">Full bleed (fills frame)</option>
             <option value="fill-blur">True size + blur fill</option>
-            <option value="fill-mirror">True size + mirror fill</option>
             <option value="fill-black">True size + black fill</option>
             <option value="fill-white">True size + white fill</option>
             <option value="smart">Smart stretch</option>
             <option value="plain">Plain stretch</option>
           </select>
         </label>
-        <label>Dither:
-          <select id="dither">
-            <option value="fs" selected>Floyd-Steinberg</option>
-            <option value="none">None</option>
-          </select>
+        <label style="display:block; margin-bottom:6px;">Bottom trim <span id="dsBtrimV"></span>%
+          <input type="range" id="dsBtrim" min="0" max="12" step="0.5" style="width:100%;">
+        </label>
+        <label style="display:block; margin-bottom:6px;">Side trim <span id="dsStrimV"></span>%
+          <input type="range" id="dsStrim" min="0" max="15" step="0.5" style="width:100%;">
+        </label>
+        <label style="display:block; margin-bottom:6px;">Gamma <span id="dsGammaV"></span>
+          <input type="range" id="dsGamma" min="0.5" max="2.2" step="0.05" style="width:100%;">
+        </label>
+        <label style="display:block; margin-bottom:6px;">Contrast <span id="dsContrastV"></span>
+          <input type="range" id="dsContrast" min="-50" max="50" step="2" style="width:100%;">
         </label>
       </div>
-      <div class="opts">
-        <label>Side trim % <input type="range" id="strim" min="0" max="15" step="0.5" value="0"> <span id="strimV">0</span></label>
-        <label>Bottom trim % <input type="range" id="btrim" min="0" max="12" step="0.5" value="5.5"> <span id="btrimV">5.5</span></label>
-        <label>Top trim % <input type="range" id="ttrim" min="0" max="12" step="0.5" value="0"> <span id="ttrimV">0</span></label>
-      </div>
-      <div class="opts">
-        <label>Gamma <input type="range" id="gamma" min="0.5" max="2.2" step="0.05" value="1.35"> <span id="gammaV">1.35</span></label>
-        <label>Brightness <input type="range" id="bright" min="-60" max="60" step="2" value="0"> <span id="brightV">0</span></label>
-        <label>Contrast <input type="range" id="contrast" min="-50" max="50" step="2" value="10"> <span id="contrastV">10</span></label>
-      </div>
-      <div id="status"></div>
-      <button id="dlBtn" disabled>Download card_image.h</button>
-    </div>
-    <div class="panel">
-      <h2>3. Send to dock</h2>
-      <button id="btBtn">Connect Bluetooth</button>
-      <button id="sendBtn" disabled style="margin-left:8px;">Send to dock</button>
-      <div style="margin-top:12px; background:#0f1626; border-radius:8px; height:14px; overflow:hidden;">
-        <div id="prog" style="height:100%; width:0%; background:#8b5cf6; transition:width .15s;"></div>
-      </div>
-      <div id="btStatus" style="font-size:13px; color:#9fe1cb; min-height:18px; margin-top:8px;">Not connected</div>
+      <button class="menu-close" id="menuClose">Close</button>
     </div>
   </div>
 
-  <div class="panel">
-    <h2>Preview (left: source, right: 4-grey as the panel will show it)</h2>
-    <div class="canvases">
-      <figure><canvas id="src" width="240" height="400"></canvas><figcaption>Source</figcaption></figure>
-      <figure><canvas id="out" width="480" height="800" style="width:240px;"></canvas><figcaption>4-grey 480x800</figcaption></figure>
-    </div>
+  <!-- Image Zoom Overlay -->
+  <div class="zoom-overlay" id="zoomOverlay">
+    <img id="zoomImage" src="" alt="Card preview">
   </div>
-</div>
 
-<script>
-const W = 480, H = 800;
-let packed = null;
-let lastImg = null;
+  <canvas id="canvas" class="hidden"></canvas>
 
-const srcC = document.getElementById('src'), srcX = srcC.getContext('2d');
-const outC = document.getElementById('out'), outX = outC.getContext('2d');
-const status = document.getElementById('status');
-const dlBtn = document.getElementById('dlBtn');
-
-function setStatus(t){ status.textContent = t; }
-function val(id){ return parseFloat(document.getElementById(id).value); }
-
-async function fetchCard(){
-  const name = document.getElementById('cardName').value.trim();
-  if(!name) return;
-  setStatus('Fetching from Scryfall...');
-  try {
-    const api = 'https://api.scryfall.com/cards/named?fuzzy=' + encodeURIComponent(name);
-    const r = await fetch(api);
-    if(!r.ok) throw new Error('Card not found');
-    const j = await r.json();
-    const u = (j.image_uris && (j.image_uris.png || j.image_uris.large || j.image_uris.normal))
-           || (j.card_faces && j.card_faces[0].image_uris && (j.card_faces[0].image_uris.png || j.card_faces[0].image_uris.normal));
-    if(!u) throw new Error('No image on that card');
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => { lastImg = img; process(img); };
-    img.onerror = () => setStatus('Image load failed');
-    img.src = u;
-  } catch(e){ setStatus('Error: ' + e.message); }
-}
-
-function handleFile(f){
-  const img = new Image();
-  img.onload = () => { lastImg = img; process(img); };
-  img.src = URL.createObjectURL(f);
-}
-
-// Pre-crop the card by side/top/bottom trim percentages, returns a canvas
-function preCrop(img){
-  const st = val('strim')/100, bt = val('btrim')/100, tt = val('ttrim')/100;
-  const sx = img.width*st, sw = img.width*(1-2*st);
-  const sy = img.height*tt, sh = img.height*(1-tt-bt);
-  const c = document.createElement('canvas');
-  c.width = Math.max(1, Math.round(sw));
-  c.height = Math.max(1, Math.round(sh));
-  const x = c.getContext('2d');
-  x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
-  x.drawImage(img, sx, sy, sw, sh, 0, 0, c.width, c.height);
-  return c;
-}
-
-// Smart stretch row map (standard modern frame zones)
-function buildRowMap(srcH){
-  const zones = [
-    {a:0.000, b:0.055, w:0.55},
-    {a:0.055, b:0.110, w:1.00},
-    {a:0.110, b:0.575, w:1.00},
-    {a:0.575, b:0.635, w:1.00},
-    {a:0.635, b:0.930, w:0.80},
-    {a:0.930, b:1.000, w:0.35},
-  ];
-  let weighted = 0;
-  zones.forEach(z => weighted += (z.b - z.a) * srcH * z.w);
-  const k = H / weighted;
-  const map = new Float32Array(H);
-  let outRow = 0;
-  for(const z of zones){
-    const srcSpan = (z.b - z.a) * srcH;
-    const dstRows = Math.round(srcSpan * z.w * k);
-    for(let r=0; r<dstRows && outRow<H; r++, outRow++){
-      map[outRow] = z.a*srcH + (r/dstRows)*srcSpan;
-    }
-  }
-  while(outRow < H){ map[outRow] = srcH-1; outRow++; }
-  return map;
-}
-
-// Compose the final 480x800 canvas per mode from the pre-cropped card
-function compose(card, mode){
-  const c = document.createElement('canvas'); c.width = W; c.height = H;
-  const x = c.getContext('2d');
-  x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
-
-  const cardH = Math.round(card.height * (W / card.width));
-  const y0 = Math.round((H - cardH) / 2);
-
-  if(mode === 'fullbleed'){
-    // top-anchored cover: fill the frame, cropping whatever the trims left over
-    const scale = Math.max(W/card.width, H/card.height);
-    const dw = card.width*scale, dh = card.height*scale;
-    x.drawImage(card, (W-dw)/2, 0, dw, dh);
-  } else if(mode === 'fill-blur'){
-    const cover = Math.max(W/card.width, H/card.height) * 1.1;
-    const bw = card.width*cover, bh = card.height*cover;
-    x.filter = 'blur(18px) brightness(0.8)';
-    x.drawImage(card, (W-bw)/2, (H-bh)/2, bw, bh);
-    x.filter = 'none';
-    if(cardH <= H) x.drawImage(card, 0, y0, W, cardH);
-    else { const s2 = H/card.height, w2 = card.width*s2; x.drawImage(card, (W-w2)/2, 0, w2, H); }
-  } else if(mode === 'fill-mirror'){
-    if(cardH <= H){
-      x.drawImage(card, 0, y0, W, cardH);
-      if(y0 > 0){
-        x.save(); x.translate(0, y0); x.scale(1,-1);
-        x.drawImage(card, 0, 0, card.width, card.height*(y0/cardH), 0, 0, W, y0);
-        x.restore();
-        x.save(); x.translate(0, y0 + cardH); x.scale(1,-1);
-        const srcStrip = card.height*(y0/cardH);
-        x.drawImage(card, 0, card.height - srcStrip, card.width, srcStrip, 0, -(H-(y0+cardH)), W, H-(y0+cardH));
-        x.restore();
+  <script>
+    // =====================================================
+    // FORMAT CONFIGURATION
+    // =====================================================
+    const FORMATS = {
+      mtg_standard: {
+        tcg: 'mtg',
+        tcgName: 'Magic: The Gathering',
+        formatName: 'Standard',
+        searchPlaceholder: 'Search for MTG cards...',
+        searchFilter: '',
+        showTokenSearch: true,
+        showListAll: false,
+        storagePrefix: 'mtg',
+        color: '#8b5cf6',
+        accentColor: '#ec4899'
+      },
+      mtg_planechase: {
+        tcg: 'mtg',
+        tcgName: 'Magic: The Gathering',
+        formatName: 'Planechase',
+        searchPlaceholder: 'Search Planechase cards...',
+        searchFilter: '(type:plane OR type:phenomenon)',
+        showTokenSearch: false,
+        showListAll: true,
+        storagePrefix: 'mtg_planechase',
+        color: '#ec4899',
+        accentColor: '#8b5cf6'
       }
-    } else { const s2 = H/card.height, w2 = card.width*s2; x.fillStyle='#fff'; x.fillRect(0,0,W,H); x.drawImage(card,(W-w2)/2,0,w2,H); }
-  } else if(mode === 'fill-black' || mode === 'fill-white'){
-    x.fillStyle = mode === 'fill-black' ? '#000' : '#fff';
-    x.fillRect(0,0,W,H);
-    if(cardH <= H) x.drawImage(card, 0, y0, W, cardH);
-    else { const s2 = H/card.height, w2 = card.width*s2; x.drawImage(card, (W-w2)/2, 0, w2, H); }
-  }
-  return x.getImageData(0,0,W,H);
-}
+    };
 
-function process(img){
-  setStatus('Converting...');
-  srcX.fillStyle = '#fff'; srcX.fillRect(0,0,srcC.width,srcC.height);
-  const s = Math.min(srcC.width/img.width, srcC.height/img.height);
-  srcX.drawImage(img, (srcC.width-img.width*s)/2, (srcC.height-img.height*s)/2, img.width*s, img.height*s);
+    // =====================================================
+    // STATE
+    // =====================================================
+    let currentFormat = 'mtg_standard';
+    let btDevice = null;
+    let btCharacteristic = null;
+    let cardPreferences = {};
+    let favourites = [];
+    let recentCards = [];
+    let decks = [];
+    let pendingDeckCard = null;
 
-  const mode = document.getElementById('mode').value;
-  const card = preCrop(img);
+    const MAX_RECENT = 20;
+    const EPD_W = 480, EPD_H = 800;
+    const IMAGE_PACKED_SIZE = EPD_W * EPD_H / 4; // 2 bits per pixel = 96000
 
-  const gamma = val('gamma'), bright = val('bright'), contrast = val('contrast');
-  const cf = (259 * (contrast + 255)) / (255 * (259 - contrast));
-  const tone = v => {
-    let t = 255 * Math.pow(v / 255, gamma);
-    t = cf * (t - 128) + 128 + bright;
-    return Math.max(0, Math.min(255, t));
-  };
+    // Display/conversion settings (persisted)
+    let dispSettings = { mode: 'fullbleed', strim: 0, btrim: 5.5, ttrim: 0, gamma: 1.35, bright: 0, contrast: 10, dither: 'fs' };
+    try { const s = localStorage.getItem('tc_display_settings'); if (s) dispSettings = Object.assign(dispSettings, JSON.parse(s)); } catch (e) {}
+    function saveDispSettings() { try { localStorage.setItem('tc_display_settings', JSON.stringify(dispSettings)); } catch (e) {} }
 
-  const grey = new Float32Array(W*H);
+    const btBtn = document.getElementById('btBtn');
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const tokenBtn = document.getElementById('tokenBtn');
+    const listAllBtn = document.getElementById('listAllBtn');
+    const resultsEl = document.getElementById('results');
+    const statusEl = document.getElementById('status');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
 
-  if(mode === 'smart' || mode === 'plain'){
-    const trueH = Math.round(card.height * (W / card.width));
-    const work = document.createElement('canvas'); work.width = W; work.height = trueH;
-    const wx = work.getContext('2d');
-    wx.imageSmoothingEnabled = true; wx.imageSmoothingQuality = 'high';
-    wx.drawImage(card, 0, 0, W, trueH);
-    const srcData = wx.getImageData(0, 0, W, trueH);
-    const map = (mode === 'smart' && trueH > H) ? buildRowMap(trueH) : null;
-    for(let y=0;y<H;y++){
-      const sy = map ? Math.min(trueH-1, Math.floor(map[y]))
-                     : Math.min(trueH-1, Math.floor(y * trueH / H));
-      for(let xx=0;xx<W;xx++){
-        const si = (sy*W + xx)*4;
-        grey[y*W+xx] = tone(0.299*srcData.data[si] + 0.587*srcData.data[si+1] + 0.114*srcData.data[si+2]);
+    function storageKey(key) {
+      const prefix = FORMATS[currentFormat].storagePrefix;
+      return `${prefix}_${key}`;
+    }
+
+    function loadFormatState() {
+      cardPreferences = {};
+      favourites = [];
+      recentCards = [];
+      decks = [];
+      try { const s = localStorage.getItem(storageKey('card_preferences')); if (s) cardPreferences = JSON.parse(s); } catch (e) {}
+      try { const s = localStorage.getItem(storageKey('favourites')); if (s) favourites = JSON.parse(s); } catch (e) {}
+      try { const s = localStorage.getItem(storageKey('recent')); if (s) recentCards = JSON.parse(s); } catch (e) {}
+      try { const s = localStorage.getItem(storageKey('decks')); if (s) decks = JSON.parse(s); } catch (e) {}
+    }
+
+    loadFormatState();
+
+    function saveFavourites() { try { localStorage.setItem(storageKey('favourites'), JSON.stringify(favourites)); } catch (e) {} updateTabCounts(); }
+    function saveRecent() { try { localStorage.setItem(storageKey('recent'), JSON.stringify(recentCards)); } catch (e) {} updateTabCounts(); }
+    function saveDecks() { try { localStorage.setItem(storageKey('decks'), JSON.stringify(decks)); } catch (e) {} updateTabCounts(); }
+
+    function updateTabCounts() {
+      document.getElementById('favCount').textContent = favourites.length > 0 ? `(${favourites.length})` : '';
+      document.getElementById('recentCount').textContent = recentCards.length > 0 ? `(${recentCards.length})` : '';
+      document.getElementById('deckCount').textContent = decks.length > 0 ? `(${decks.length})` : '';
+    }
+    updateTabCounts();
+
+    // =====================================================
+    // TABS
+    // =====================================================
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+        if (tab.dataset.tab === 'favourites') renderFavourites();
+        if (tab.dataset.tab === 'recent') renderRecent();
+        if (tab.dataset.tab === 'decks') renderDecks();
+      });
+    });
+
+    // =====================================================
+    // FORMAT SWITCHING (Menu Drawer)
+    // =====================================================
+
+    const menuBtn = document.getElementById('menuBtn');
+    const menuOverlay = document.getElementById('menuOverlay');
+    const formatBadge = document.getElementById('formatBadge');
+
+    function openMenu() {
+      menuOverlay.classList.add('open');
+      menuBtn.classList.add('open');
+    }
+
+    function closeMenu() {
+      menuOverlay.classList.remove('open');
+      menuBtn.classList.remove('open');
+    }
+
+    menuBtn.addEventListener('click', openMenu);
+    document.getElementById('menuClose').addEventListener('click', closeMenu);
+    menuOverlay.addEventListener('click', (e) => { if (e.target === menuOverlay) closeMenu(); });
+
+    function switchFormat(formatKey) {
+      if (formatKey === currentFormat) { closeMenu(); return; }
+
+      // End any active planechase game
+      if (pcGameActive) endPlanechaseGame();
+
+      currentFormat = formatKey;
+      try { localStorage.setItem('tc_active_format', formatKey); } catch (e) {}
+
+      // Update menu selection
+      document.querySelectorAll('.menu-option').forEach(o => o.classList.toggle('active', o.dataset.format === formatKey));
+
+      // Update format badge
+      const fmt = FORMATS[currentFormat];
+      if (formatKey === 'mtg_standard') {
+        formatBadge.classList.remove('visible');
+      } else {
+        formatBadge.textContent = fmt.formatName;
+        formatBadge.classList.add('visible');
       }
-    }
-  } else {
-    const d = compose(card, mode);
-    for(let i=0;i<W*H;i++){
-      grey[i] = tone(0.299*d.data[i*4] + 0.587*d.data[i*4+1] + 0.114*d.data[i*4+2]);
-    }
-  }
 
-  const useFS = document.getElementById('dither').value === 'fs';
-  const lvl = v => Math.round(Math.max(0,Math.min(255,v))/85)*85;
-  const outLvls = new Uint8Array(W*H);
-  for(let y=0;y<H;y++){
-    for(let xx=0;xx<W;xx++){
-      const i = y*W+xx;
-      const old = grey[i];
-      const nv = lvl(old);
-      outLvls[i] = nv;
-      if(useFS){
-        const err = old - nv;
-        if(xx+1<W)            grey[i+1]     += err*7/16;
-        if(y+1<H){
-          if(xx>0)            grey[i+W-1]   += err*3/16;
-                              grey[i+W]     += err*5/16;
-          if(xx+1<W)          grey[i+W+1]   += err*1/16;
+      // Load format-specific state
+      loadFormatState();
+
+      // Update UI
+      searchInput.placeholder = fmt.searchPlaceholder;
+      tokenBtn.style.display = fmt.showTokenSearch ? '' : 'none';
+      listAllBtn.style.display = fmt.showListAll ? '' : 'none';
+      document.body.classList.toggle('pc-mode', formatKey === 'mtg_planechase');
+
+      // Clear search results and reset to search tab
+      resultsEl.innerHTML = '';
+      searchInput.value = '';
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelector('.tab[data-tab="search"]').classList.add('active');
+      document.getElementById('tab-search').classList.add('active');
+
+      updateTabCounts();
+      updateGamePanelVisibility();
+      closeMenu();
+    }
+
+    document.querySelectorAll('.menu-option').forEach(opt => {
+      opt.addEventListener('click', () => switchFormat(opt.dataset.format));
+    });
+
+    // Restore last active format
+    try {
+      const saved = localStorage.getItem('tc_active_format');
+      if (saved && FORMATS[saved]) {
+        currentFormat = saved;
+        loadFormatState();
+        document.querySelectorAll('.menu-option').forEach(o => o.classList.toggle('active', o.dataset.format === saved));
+        const fmt = FORMATS[currentFormat];
+        searchInput.placeholder = fmt.searchPlaceholder;
+        tokenBtn.style.display = fmt.showTokenSearch ? '' : 'none';
+        listAllBtn.style.display = fmt.showListAll ? '' : 'none';
+        document.body.classList.toggle('pc-mode', saved === 'mtg_planechase');
+        if (saved !== 'mtg_standard') {
+          formatBadge.textContent = fmt.formatName;
+          formatBadge.classList.add('visible');
         }
       }
+    } catch (e) {}
+
+    updateTabCounts();
+
+    // =====================================================
+    // PLANECHASE GAME STATE
+    // =====================================================
+
+    let pcGameActive = false;
+    let pcShuffledDeck = [];     // shuffled copy of cards
+    let pcCurrentIndex = 0;      // index in shuffled deck
+    let pcSourceDeckIdx = null;  // which deck we're playing from
+
+    function updateGamePanelVisibility() {
+      document.getElementById('pcGamePanel').classList.toggle('visible', pcGameActive && currentFormat === 'mtg_planechase');
     }
-  }
 
-  const od = outX.createImageData(W,H);
-  for(let i=0;i<W*H;i++){ od.data[i*4]=od.data[i*4+1]=od.data[i*4+2]=outLvls[i]; od.data[i*4+3]=255; }
-  outX.putImageData(od,0,0);
-
-  packed = new Uint8Array(W*H/4);
-  for(let i=0;i<W*H;i++){
-    packed[i>>2] |= (outLvls[i]/85) << (6 - (i&3)*2);
-  }
-  dlBtn.disabled = false;
-  if (typeof updateSendEnable === 'function') updateSendEnable();
-  setStatus('Done. ' + packed.length + ' bytes. Download the header and drop it in the sketch folder.');
-}
-
-['mode','dither'].forEach(id => document.getElementById(id).onchange = () => lastImg && process(lastImg));
-['gamma','bright','contrast','strim','btrim','ttrim'].forEach(id => {
-  const el = document.getElementById(id);
-  el.oninput = () => {
-    document.getElementById(id+'V').textContent = el.value;
-    lastImg && process(lastImg);
-  };
-});
-
-function download(){
-  if(!packed) return;
-  let s = '// Generated by Token Conjurer card converter v5\n';
-  s += '// 480x800, 2 bits/px (0=black 1=dark 2=light 3=white), 4 px/byte, MSB first, row-major\n';
-  s += '#pragma once\n#include <pgmspace.h>\n';
-  s += 'const uint16_t CARD_W = 480;\nconst uint16_t CARD_H = 800;\n';
-  s += 'const uint8_t CARD_IMAGE[' + packed.length + '] PROGMEM = {\n';
-  const parts = [];
-  for(let i=0;i<packed.length;i++) parts.push('0x'+packed[i].toString(16).padStart(2,'0'));
-  for(let i=0;i<parts.length;i+=32) s += parts.slice(i,i+32).join(',') + ',\n';
-  s += '};\n';
-  const blob = new Blob([s], {type:'text/plain'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'card_image.h';
-  a.click();
-}
-
-document.getElementById('fetchBtn').onclick = fetchCard;
-dlBtn.onclick = download;
-const drop = document.getElementById('drop'), file = document.getElementById('file');
-drop.onclick = () => file.click();
-file.onchange = e => e.target.files[0] && handleFile(e.target.files[0]);
-drop.ondragover = e => { e.preventDefault(); drop.classList.add('hover'); };
-drop.ondragleave = () => drop.classList.remove('hover');
-drop.ondrop = e => { e.preventDefault(); drop.classList.remove('hover'); e.dataTransfer.files[0] && handleFile(e.dataTransfer.files[0]); };
-
-// ================= BLE =================
-const SVC_UUID  = '7a0b1000-8f5e-4c2a-9b3d-1c2e3f405060';
-const CTRL_UUID = '7a0b1001-8f5e-4c2a-9b3d-1c2e3f405060';
-const DATA_UUID = '7a0b1002-8f5e-4c2a-9b3d-1c2e3f405060';
-
-let btDevice = null, ctrlChar = null, dataChar = null;
-let ackBase = 0;
-let waiters = [];
-
-const btBtn = document.getElementById('btBtn');
-const sendBtn = document.getElementById('sendBtn');
-const btStatus = document.getElementById('btStatus');
-const prog = document.getElementById('prog');
-
-function bstat(t){ btStatus.textContent = t; }
-function updateSendEnable(){ sendBtn.disabled = !(ctrlChar && dataChar && packed); }
-
-function onCtrlNotify(e){
-  const msg = new TextDecoder().decode(e.target.value);
-  if(msg.startsWith('A:')){
-    ackBase = parseInt(msg.slice(2)) || ackBase;
-  }
-  waiters = waiters.filter(w => {
-    if(msg.startsWith(w.prefix)){ w.resolve(msg); return false; }
-    return true;
-  });
-  if(msg.startsWith('ERR')) bstat('Dock error: ' + msg);
-  if(msg === 'DONE') bstat('Card displayed on dock.');
-}
-
-function waitFor(prefix, timeoutMs){
-  return new Promise((resolve, reject) => {
-    const w = { prefix, resolve };
-    waiters.push(w);
-    setTimeout(() => {
-      waiters = waiters.filter(x => x !== w);
-      reject(new Error('Timeout waiting for ' + prefix));
-    }, timeoutMs);
-  });
-}
-
-async function connectBT(){
-  try {
-    bstat('Choosing device...');
-    btDevice = await navigator.bluetooth.requestDevice({
-      filters: [{ namePrefix: 'TokenConjurer' }],
-      optionalServices: [SVC_UUID]
-    });
-    btDevice.addEventListener('gattserverdisconnected', () => {
-      ctrlChar = null; dataChar = null;
-      bstat('Disconnected'); btBtn.textContent = 'Connect Bluetooth';
-      updateSendEnable();
-    });
-    bstat('Connecting...');
-    const gatt = await btDevice.gatt.connect();
-    const svc = await gatt.getPrimaryService(SVC_UUID);
-    ctrlChar = await svc.getCharacteristic(CTRL_UUID);
-    dataChar = await svc.getCharacteristic(DATA_UUID);
-    await ctrlChar.startNotifications();
-    ctrlChar.addEventListener('characteristicvaluechanged', onCtrlNotify);
-    bstat('Connected to ' + btDevice.name);
-    btBtn.textContent = 'Connected';
-    updateSendEnable();
-  } catch(e){ bstat('Bluetooth: ' + e.message); }
-}
-
-async function writeCtrl(s){
-  await ctrlChar.writeValue(new TextEncoder().encode(s));
-}
-
-async function sendImage(){
-  if(!packed || !dataChar) return;
-  sendBtn.disabled = true;
-  prog.style.width = '0%';
-  try {
-    ackBase = 0;
-    bstat('Starting transfer...');
-    const rdy = waitFor('RDY', 5000); 
-    await writeCtrl('BEGIN ' + packed.length);
-    await rdy;
-
-    const CHUNK = 244;
-    const WINDOW = 12288;
-    const canNR = !!dataChar.writeValueWithoutResponse;
-    const t0 = performance.now();
-
-    for(let off = 0; off < packed.length; off += CHUNK){
-      while(off - ackBase > WINDOW){
-        await waitFor('A:', 8000);
+    function shuffleArray(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
       }
-      const slice = packed.slice(off, Math.min(off + CHUNK, packed.length));
-      if(canNR) await dataChar.writeValueWithoutResponse(slice);
-      else      await dataChar.writeValue(slice);
-      if((off / CHUNK) % 8 === 0){
-        prog.style.width = Math.round(off / packed.length * 100) + '%';
-        bstat('Sending... ' + Math.round(off / packed.length * 100) + '%');
+      return a;
+    }
+
+    function startPlanechaseGame(deckIdx) {
+      const deck = decks[deckIdx];
+      if (!deck || deck.cards.length === 0) {
+        showStatus('Deck is empty — add some planes first', 'error');
+        return;
+      }
+
+      pcSourceDeckIdx = deckIdx;
+      pcShuffledDeck = shuffleArray(deck.cards);
+      pcCurrentIndex = 0;
+      pcGameActive = true;
+
+      updateGamePanelVisibility();
+      renderCurrentPlane();
+      sendCurrentPlane();
+
+      showStatus(`Planechase started! Playing "${deck.name}" (${pcShuffledDeck.length} planes)`, 'success');
+    }
+
+    function renderCurrentPlane() {
+      if (!pcGameActive || pcShuffledDeck.length === 0) return;
+      const card = pcShuffledDeck[pcCurrentIndex];
+      document.getElementById('pcPlaneThumb').src = card.image_small;
+      document.getElementById('pcPlaneName').textContent = card.name;
+      document.getElementById('pcPlaneMeta').textContent = `${card.set_name} (${card.set.toUpperCase()})`;
+      document.getElementById('pcPosition').textContent = `Plane ${pcCurrentIndex + 1} of ${pcShuffledDeck.length}`;
+    }
+
+    async function sendCurrentPlane() {
+      if (!pcGameActive || pcShuffledDeck.length === 0) return;
+      const card = pcShuffledDeck[pcCurrentIndex];
+      if (!card.image_large) { showStatus('No image for this plane', 'error'); return; }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      await sendCard(card.image_large, card.name);
+    }
+
+    function planeswalk() {
+      if (!pcGameActive || pcShuffledDeck.length === 0) return;
+      // Move current card to the bottom of the deck
+      const current = pcShuffledDeck.splice(pcCurrentIndex, 1)[0];
+      pcShuffledDeck.push(current);
+      // pcCurrentIndex stays at 0 since we always draw from current position
+      // But if we were at the end, wrap around
+      if (pcCurrentIndex >= pcShuffledDeck.length) pcCurrentIndex = 0;
+
+      renderCurrentPlane();
+      sendCurrentPlane();
+    }
+
+    function endPlanechaseGame() {
+      pcGameActive = false;
+      pcShuffledDeck = [];
+      pcCurrentIndex = 0;
+      pcSourceDeckIdx = null;
+      updateGamePanelVisibility();
+      renderDecks();
+      showStatus('Planechase game ended', 'info');
+    }
+
+    // Wire up game panel buttons
+    document.getElementById('pcPlaneswalkBtn').addEventListener('click', planeswalk);
+    document.getElementById('pcResendBtn').addEventListener('click', sendCurrentPlane);
+    document.getElementById('pcStopBtn').addEventListener('click', () => {
+      endPlanechaseGame();
+    });
+
+    // =====================================================
+    // IMAGE ZOOM
+    // =====================================================
+
+    const zoomOverlay = document.getElementById('zoomOverlay');
+    const zoomImage = document.getElementById('zoomImage');
+
+    window.zoomCard = function(smallUrl) {
+      const largeUrl = smallUrl.replace('/small/', '/large/').replace('?format=image', '?format=image');
+      zoomImage.src = largeUrl;
+      zoomOverlay.classList.toggle('pc-rotate', currentFormat === 'mtg_planechase');
+      zoomOverlay.classList.add('open');
+    };
+
+    zoomOverlay.addEventListener('click', () => {
+      zoomOverlay.classList.remove('open', 'pc-rotate');
+      zoomImage.src = '';
+    });
+
+    // =====================================================
+    // CARD DATA HELPERS
+    // =====================================================
+
+    function getImageUris(card) {
+      if (card.image_uris) return card.image_uris;
+      if (card.card_faces && card.card_faces[0] && card.card_faces[0].image_uris) return card.card_faces[0].image_uris;
+      return null;
+    }
+
+    function cardToStorable(card) {
+      const uris = getImageUris(card);
+      return {
+        name: card.name, set: card.set, set_name: card.set_name, id: card.id,
+        image_small: uris?.small || '', image_large: uris?.png || uris?.large || ''
+      };
+    }
+
+    function isFavourited(cardId) { return favourites.some(f => f.id === cardId); }
+
+    function toggleFavourite(card) {
+      const idx = favourites.findIndex(f => f.id === card.id);
+      if (idx >= 0) favourites.splice(idx, 1);
+      else favourites.push(cardToStorable(card));
+      saveFavourites();
+    }
+
+    function addToRecent(card) {
+      recentCards = recentCards.filter(r => r.id !== card.id);
+      const entry = cardToStorable(card);
+      entry.sentAt = Date.now();
+      recentCards.unshift(entry);
+      if (recentCards.length > MAX_RECENT) recentCards = recentCards.slice(0, MAX_RECENT);
+      saveRecent();
+    }
+
+    function refreshSearchFavStars() {
+      resultsEl.querySelectorAll('.card-item').forEach(cardEl => {
+        try {
+          const versions = JSON.parse(cardEl.dataset.versions);
+          const card = versions[parseInt(cardEl.dataset.selectedIndex)];
+          const safe = card.name.replace(/[^a-z0-9]/gi, '');
+          const favBtn = document.getElementById(`fav-${safe}`);
+          if (favBtn) favBtn.classList.toggle('favourited', isFavourited(card.id));
+        } catch (e) {}
+      });
+    }
+
+    // =====================================================
+    // BLUETOOTH
+    // =====================================================
+
+    const SVC_UUID  = '7a0b1000-8f5e-4c2a-9b3d-1c2e3f405060';
+    const CTRL_UUID = '7a0b1001-8f5e-4c2a-9b3d-1c2e3f405060';
+    const DATA_UUID = '7a0b1002-8f5e-4c2a-9b3d-1c2e3f405060';
+    let ctrlChar = null, dataChar = null;
+    let ackBase = 0;
+    let bleWaiters = [];
+
+    function onCtrlNotify(e) {
+      const msg = new TextDecoder().decode(e.target.value);
+      if (msg.startsWith('A:')) { ackBase = parseInt(msg.slice(2)) || ackBase; }
+      bleWaiters = bleWaiters.filter(w => {
+        if (msg.startsWith(w.prefix)) { w.resolve(msg); return false; }
+        return true;
+      });
+      if (msg.startsWith('ERR')) showStatus('Dock error: ' + msg, 'error');
+    }
+
+    function bleWaitFor(prefix, timeoutMs) {
+      return new Promise((resolve, reject) => {
+        const w = { prefix, resolve };
+        bleWaiters.push(w);
+        setTimeout(() => { bleWaiters = bleWaiters.filter(x => x !== w); reject(new Error('Timeout: ' + prefix)); }, timeoutMs);
+      });
+    }
+
+    btBtn.addEventListener('click', async () => {
+      try {
+        showStatus('Connecting...', 'info');
+        const device = await navigator.bluetooth.requestDevice({
+          filters: [{ namePrefix: 'TokenConjurer' }],
+          optionalServices: [SVC_UUID]
+        });
+        device.addEventListener('gattserverdisconnected', () => {
+          ctrlChar = null; dataChar = null; btCharacteristic = null;
+          btBtn.textContent = 'Connect BT';
+          btBtn.classList.remove('connected');
+          showStatus('Dock disconnected', 'error');
+        });
+        const server = await device.gatt.connect();
+        const service = await server.getPrimaryService(SVC_UUID);
+        ctrlChar = await service.getCharacteristic(CTRL_UUID);
+        dataChar = await service.getCharacteristic(DATA_UUID);
+        await ctrlChar.startNotifications();
+        ctrlChar.addEventListener('characteristicvaluechanged', onCtrlNotify);
+        btCharacteristic = dataChar; // legacy truthiness checks elsewhere
+        btDevice = device;
+        btBtn.textContent = 'Connected';
+        btBtn.classList.add('connected');
+        showStatus('Connected to ' + device.name + '!', 'success');
+      } catch (error) {
+        showStatus('Connection failed: ' + error.message, 'error');
+      }
+    });
+
+    // =====================================================
+    // SEARCH
+    // =====================================================
+    searchBtn.addEventListener('click', () => searchCards(false));
+    tokenBtn.addEventListener('click', () => searchCards(true));
+    listAllBtn.addEventListener('click', () => listAllPlanechase());
+    searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchCards(false); });
+
+    async function listAllPlanechase() {
+      searchBtn.disabled = true;
+      listAllBtn.disabled = true;
+      resultsEl.innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading all Planechase cards...</div></div>';
+
+      try {
+        const fmt = FORMATS[currentFormat];
+        const q = fmt.searchFilter || '(type:plane OR type:phenomenon)';
+        let allCards = [];
+        let url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(q)}&unique=prints&order=name`;
+
+        while (url) {
+          const resp = await fetch(url);
+          const data = await resp.json();
+          if (data.data) allCards = allCards.concat(data.data);
+          url = data.has_more ? data.next_page : null;
+          if (url) await new Promise(r => setTimeout(r, 100)); // rate limit courtesy
+        }
+
+        if (allCards.length > 0) {
+          const grouped = {};
+          allCards.forEach(card => { if (!grouped[card.name]) grouped[card.name] = []; grouped[card.name].push(card); });
+          displayGroupedCards(grouped);
+        } else {
+          resultsEl.innerHTML = '<div class="loading">No cards found</div>';
+        }
+      } catch (error) {
+        resultsEl.innerHTML = `<div class="loading">Error: ${error.message}</div>`;
+      } finally {
+        searchBtn.disabled = false;
+        listAllBtn.disabled = false;
       }
     }
-    prog.style.width = '100%';
-    const ok = waitFor('OK', 8000);
-    await writeCtrl('END');
-    await ok;
-    const secs = ((performance.now() - t0) / 1000).toFixed(1);
-    bstat('Transfer complete in ' + secs + 's. Dock is drawing...');
-    await waitFor('DONE', 40000);
-    bstat('Card displayed on dock.');
-  } catch(e){
-    bstat('Send failed: ' + e.message);
-  }
-  sendBtn.disabled = false;
-}
 
-btBtn.onclick = connectBT;
-sendBtn.onclick = sendImage;
-</script>
+    async function searchCards(isToken = false) {
+      const query = searchInput.value.trim();
+      if (!query) return;
+      searchBtn.disabled = true;
+      tokenBtn.disabled = true;
+      listAllBtn.disabled = true;
+      resultsEl.innerHTML = '<div class="loading"><div class="spinner"></div><div>Searching Scryfall...</div></div>';
+
+      try {
+        const fmt = FORMATS[currentFormat];
+        let sq = query;
+        if (isToken) sq = `${query} is:token`;
+        if (fmt.searchFilter) sq = `${sq} ${fmt.searchFilter}`;
+        const resp = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(sq)}&unique=prints&order=released`);
+        const data = await resp.json();
+        if (data.data && data.data.length > 0) {
+          const grouped = {};
+          data.data.forEach(card => { if (!grouped[card.name]) grouped[card.name] = []; grouped[card.name].push(card); });
+          displayGroupedCards(grouped);
+        } else {
+          resultsEl.innerHTML = '<div class="loading">No cards found</div>';
+        }
+      } catch (error) {
+        resultsEl.innerHTML = `<div class="loading">Error: ${error.message}</div>`;
+      } finally {
+        searchBtn.disabled = false;
+        tokenBtn.disabled = false;
+        listAllBtn.disabled = false;
+      }
+    }
+
+    function displayGroupedCards(grouped) {
+      resultsEl.innerHTML = '';
+      Object.entries(grouped).forEach(([cardName, versions]) => {
+        const preferredSet = cardPreferences[cardName];
+        let selectedVersion = versions.find(v => v.set === preferredSet) || versions[0];
+        const isPreferred = preferredSet && selectedVersion.set === preferredSet;
+        const uris = getImageUris(selectedVersion);
+        const fav = isFavourited(selectedVersion.id);
+        const safe = cardName.replace(/[^a-z0-9]/gi, '');
+        const escaped = cardName.replace(/'/g, "\\'");
+
+        const cardEl = document.createElement('div');
+        cardEl.className = 'card-item';
+        cardEl.innerHTML = `
+          <div class="card-main">
+            <img class="card-thumb" src="${uris?.small || ''}" alt="${cardName}" id="thumb-${safe}" onclick="zoomCard(this.src)">
+            <div class="card-info">
+              <div class="card-name">${cardName}${isPreferred ? '<span class="preferred-badge">Preferred</span>' : ''}</div>
+              <div class="card-set" id="set-${safe}">${selectedVersion.set_name} (${selectedVersion.set.toUpperCase()})</div>
+              ${versions.length > 1 ? `<div class="version-toggle" onclick="toggleVersions('${escaped}')">Choose version (${versions.length})</div>` : ''}
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="send-btn" onclick="sendSelectedCard('${escaped}')">Send to E-Paper</button>
+            <button class="fav-btn ${fav ? 'favourited' : ''}" id="fav-${safe}" onclick="toggleFavFromSearch('${escaped}')">&#9733;</button>
+            <button class="deck-add-btn" onclick="addToDeckFromSearch('${escaped}')" title="Add to deck">+D</button>
+          </div>
+          ${versions.length > 1 ? `
+            <div class="version-selector" id="versions-${safe}">
+              ${versions.map((v, idx) => `
+                <button class="version-btn ${v.id === selectedVersion.id ? 'selected' : ''}"
+                        onclick="selectVersion('${escaped}', ${idx})">${v.set.toUpperCase()}</button>
+              `).join('')}
+            </div>` : ''}
+        `;
+        resultsEl.appendChild(cardEl);
+        cardEl.dataset.versions = JSON.stringify(versions);
+        cardEl.dataset.selectedIndex = versions.findIndex(v => v.id === selectedVersion.id).toString();
+      });
+    }
+
+    window.toggleVersions = function(cardName) {
+      const el = document.getElementById(`versions-${cardName.replace(/[^a-z0-9]/gi, '')}`);
+      if (el) el.classList.toggle('open');
+    };
+
+    window.selectVersion = function(cardName, idx) {
+      const safe = cardName.replace(/[^a-z0-9]/gi, '');
+      const cardEl = Array.from(resultsEl.children).find(el => el.querySelector(`#thumb-${safe}`));
+      if (!cardEl) return;
+      const versions = JSON.parse(cardEl.dataset.versions);
+      const selected = versions[idx];
+      cardEl.dataset.selectedIndex = idx;
+      const uris = getImageUris(selected);
+      document.getElementById(`thumb-${safe}`).src = uris?.small || '';
+      document.getElementById(`set-${safe}`).textContent = `${selected.set_name} (${selected.set.toUpperCase()})`;
+      const nameEl = cardEl.querySelector('.card-name');
+      nameEl.innerHTML = cardName + '<span class="preferred-badge">Preferred</span>';
+      document.querySelectorAll(`#versions-${safe} .version-btn`).forEach((btn, i) => { btn.classList.toggle('selected', i === idx); });
+      const favBtn = document.getElementById(`fav-${safe}`);
+      if (favBtn) favBtn.classList.toggle('favourited', isFavourited(selected.id));
+      cardPreferences[cardName] = selected.set;
+      try { localStorage.setItem(storageKey('card_preferences'), JSON.stringify(cardPreferences)); } catch (e) {}
+    };
+
+    window.toggleFavFromSearch = function(cardName) {
+      const safe = cardName.replace(/[^a-z0-9]/gi, '');
+      const cardEl = Array.from(resultsEl.children).find(el => el.querySelector(`#thumb-${safe}`));
+      if (!cardEl) return;
+      const versions = JSON.parse(cardEl.dataset.versions);
+      const card = versions[parseInt(cardEl.dataset.selectedIndex)];
+      toggleFavourite(card);
+      const favBtn = document.getElementById(`fav-${safe}`);
+      if (favBtn) favBtn.classList.toggle('favourited', isFavourited(card.id));
+    };
+
+    window.sendSelectedCard = async function(cardName) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const safe = cardName.replace(/[^a-z0-9]/gi, '');
+      const cardEl = Array.from(resultsEl.children).find(el => el.querySelector(`#thumb-${safe}`));
+      if (!cardEl) return;
+      const versions = JSON.parse(cardEl.dataset.versions);
+      const card = versions[parseInt(cardEl.dataset.selectedIndex)];
+      const uris = getImageUris(card);
+      if (!uris) { showStatus('No image available', 'error'); return; }
+      addToRecent(card);
+      await sendCard(uris.png || uris.large, card.name);
+    };
+
+    window.addToDeckFromSearch = function(cardName) {
+      const safe = cardName.replace(/[^a-z0-9]/gi, '');
+      const cardEl = Array.from(resultsEl.children).find(el => el.querySelector(`#thumb-${safe}`));
+      if (!cardEl) return;
+      const versions = JSON.parse(cardEl.dataset.versions);
+      const card = versions[parseInt(cardEl.dataset.selectedIndex)];
+      openDeckPicker(card);
+    };
+
+    // =====================================================
+    // DECK PICKER MODAL
+    // =====================================================
+
+    function openDeckPicker(card) {
+      pendingDeckCard = card;
+      const list = document.getElementById('deckModalList');
+      list.innerHTML = '';
+      decks.forEach((deck, idx) => {
+        const alreadyIn = deck.cards.some(c => c.id === card.id);
+        const btn = document.createElement('button');
+        btn.className = 'modal-deck-btn';
+        btn.innerHTML = `${deck.name} <span class="modal-deck-count">${deck.cards.length} cards${alreadyIn ? ' · already added' : ''}</span>`;
+        btn.disabled = alreadyIn;
+        btn.style.opacity = alreadyIn ? '0.5' : '1';
+        btn.onclick = () => { addCardToDeck(idx, card); closeDeckPicker(); };
+        list.appendChild(btn);
+      });
+      document.getElementById('deckModal').classList.add('open');
+    }
+
+    function closeDeckPicker() {
+      document.getElementById('deckModal').classList.remove('open');
+      pendingDeckCard = null;
+    }
+
+    document.getElementById('modalCancel').onclick = closeDeckPicker;
+    document.getElementById('deckModal').onclick = (e) => { if (e.target.id === 'deckModal') closeDeckPicker(); };
+
+    document.getElementById('modalNewDeck').onclick = () => {
+      const name = prompt('Deck name:');
+      if (!name || !name.trim()) return;
+      decks.push({ name: name.trim(), cards: [] });
+      saveDecks();
+      if (pendingDeckCard) {
+        addCardToDeck(decks.length - 1, pendingDeckCard);
+        closeDeckPicker();
+      } else {
+        closeDeckPicker();
+        renderDecks();
+      }
+    };
+
+    function addCardToDeck(deckIdx, card) {
+      const storable = cardToStorable(card);
+      if (!decks[deckIdx].cards.some(c => c.id === storable.id)) {
+        decks[deckIdx].cards.push(storable);
+        saveDecks();
+        showStatus(`Added to ${decks[deckIdx].name}`, 'success');
+      }
+    }
+
+    // =====================================================
+    // DECKS TAB
+    // =====================================================
+
+    function renderDecks() {
+      const el = document.getElementById('decksList');
+      const isPlanechase = currentFormat === 'mtg_planechase';
+
+      if (decks.length === 0) {
+        el.innerHTML = `
+          <button class="new-deck-btn" onclick="createNewDeck()">+ Create New Deck</button>
+          <div class="empty-state">
+            <div class="empty-state-text">${isPlanechase ? 'No Planechase decks yet.<br>Create a deck and search for planes.' : 'No decks yet.<br>Create a deck and add cards from Search.'}</div>
+          </div>`;
+        return;
+      }
+
+      el.innerHTML = '<button class="new-deck-btn" onclick="createNewDeck()">+ Create New Deck</button>';
+
+      decks.forEach((deck, di) => {
+        const div = document.createElement('div');
+        div.className = 'deck-item';
+        div.id = `deck-${di}`;
+
+        const isPlaying = isPlanechase && pcGameActive && pcSourceDeckIdx === di;
+
+        let cardsHTML = '';
+        if (!isPlaying) {
+          deck.cards.forEach((card, ci) => {
+            cardsHTML += `
+              <div class="deck-card-row">
+                <img class="deck-card-thumb" src="${card.image_small}" alt="${card.name}" onclick="zoomCard(this.src)">
+                <div class="deck-card-info">
+                  <div class="deck-card-name">${card.name}</div>
+                  <div class="deck-card-set">${card.set_name} (${card.set.toUpperCase()})</div>
+                </div>
+                <div class="deck-card-actions">
+                  <button class="deck-card-send" onclick="sendDeckCard(${di},${ci})">Send</button>
+                  <button class="deck-card-remove" onclick="removeDeckCard(${di},${ci})">&#10005;</button>
+                </div>
+              </div>`;
+          });
+        }
+
+        const playBtnHTML = isPlanechase && deck.cards.length > 0
+          ? `<button class="deck-play-btn" onclick="event.stopPropagation();startPCGame(${di})" ${isPlaying ? 'disabled style="opacity:0.5"' : ''}>${isPlaying ? '&#9654; Playing...' : '<span class="pw-icon"></span> Play'}</button>`
+          : '';
+
+        const deckCardsInner = isPlaying
+          ? `<div style="padding:14px 0;color:#888;text-align:center;font-size:13px;">Deck is in play — contents hidden</div>
+             <div class="deck-actions">
+               <button class="deck-rename-btn" onclick="renameDeck(${di})">Rename</button>
+               <button class="deck-delete-btn" onclick="deleteDeck(${di})">Delete Deck</button>
+             </div>`
+          : `${cardsHTML || `<div style="padding:12px 0;color:#555;text-align:center;">No ${isPlanechase ? 'planes' : 'cards'} yet — add from Search tab</div>`}
+             <div class="deck-actions">
+               <button class="deck-rename-btn" onclick="renameDeck(${di})">Rename</button>
+               <button class="deck-delete-btn" onclick="deleteDeck(${di})">Delete Deck</button>
+             </div>`;
+
+        div.innerHTML = `
+          <div class="deck-header" onclick="toggleDeck(${di})">
+            <div class="deck-header-info">
+              <div class="deck-header-name">${deck.name}${isPlaying ? ' <span style="color:#ec4899;font-size:12px;">● ACTIVE</span>' : ''}</div>
+              <div class="deck-header-count">${deck.cards.length} ${isPlanechase ? 'plane' : 'card'}${deck.cards.length !== 1 ? 's' : ''}</div>
+            </div>
+            ${playBtnHTML}
+            <div class="deck-header-arrow">&#9654;</div>
+          </div>
+          <div class="deck-cards">
+            ${deckCardsInner}
+          </div>`;
+
+        el.appendChild(div);
+      });
+    }
+
+    window.startPCGame = function(di) {
+      startPlanechaseGame(di);
+      renderDecks();
+    };
+
+    window.createNewDeck = function() {
+      const name = prompt('Deck name:');
+      if (!name || !name.trim()) return;
+      decks.push({ name: name.trim(), cards: [] });
+      saveDecks();
+      renderDecks();
+    };
+
+    window.toggleDeck = function(di) {
+      const el = document.getElementById(`deck-${di}`);
+      if (el) el.classList.toggle('open');
+    };
+
+    window.sendDeckCard = async function(di, ci) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const card = decks[di]?.cards[ci];
+      if (!card || !card.image_large) { showStatus('No image available', 'error'); return; }
+      const fakeCard = { id: card.id, name: card.name, set: card.set, set_name: card.set_name, image_uris: { small: card.image_small, png: card.image_large, large: card.image_large } };
+      addToRecent(fakeCard);
+      await sendCard(card.image_large, card.name);
+    };
+
+    window.removeDeckCard = function(di, ci) {
+      decks[di].cards.splice(ci, 1);
+      saveDecks();
+      renderDecks();
+      const el = document.getElementById(`deck-${di}`);
+      if (el) el.classList.add('open');
+    };
+
+    window.renameDeck = function(di) {
+      const name = prompt('New name:', decks[di].name);
+      if (!name || !name.trim()) return;
+      decks[di].name = name.trim();
+      saveDecks();
+      renderDecks();
+      const el = document.getElementById(`deck-${di}`);
+      if (el) el.classList.add('open');
+    };
+
+    window.deleteDeck = function(di) {
+      if (!confirm(`Delete "${decks[di].name}" and all its cards?`)) return;
+      if (pcGameActive && pcSourceDeckIdx === di) endPlanechaseGame();
+      if (pcSourceDeckIdx !== null && pcSourceDeckIdx > di) pcSourceDeckIdx--;
+      decks.splice(di, 1);
+      saveDecks();
+      renderDecks();
+    };
+
+    // =====================================================
+    // FAVOURITES TAB
+    // =====================================================
+
+    function renderFavourites() {
+      const el = document.getElementById('favouritesList');
+      if (favourites.length === 0) {
+        el.innerHTML = '<div class="empty-state"><div class="empty-state-text">No favourites yet.<br>Tap the star on any card to save it here.</div></div>';
+        return;
+      }
+      el.innerHTML = '';
+      favourites.forEach((card, idx) => {
+        const div = document.createElement('div');
+        div.className = 'card-item';
+        div.innerHTML = `
+          <div class="card-main">
+            <img class="card-thumb" src="${card.image_small}" alt="${card.name}" onclick="zoomCard(this.src)">
+            <div class="card-info">
+              <div class="card-name">${card.name}</div>
+              <div class="card-set">${card.set_name} (${card.set.toUpperCase()})</div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="send-btn" onclick="sendStoredCard(${idx}, 'fav')">Send to E-Paper</button>
+            <button class="fav-btn favourited" onclick="removeFavourite(${idx})">&#9733;</button>
+            <button class="deck-add-btn" onclick="addToDeckFromStored(${idx}, 'fav')" title="Add to deck">+D</button>
+          </div>`;
+        el.appendChild(div);
+      });
+    }
+
+    window.removeFavourite = function(idx) {
+      favourites.splice(idx, 1);
+      saveFavourites();
+      renderFavourites();
+      refreshSearchFavStars();
+    };
+
+    // =====================================================
+    // RECENT TAB
+    // =====================================================
+
+    function timeAgo(ts) {
+      const diff = Date.now() - ts;
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'just now';
+      if (mins < 60) return `${mins}m ago`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs}h ago`;
+      const days = Math.floor(hrs / 24);
+      return `${days}d ago`;
+    }
+
+    function renderRecent() {
+      const el = document.getElementById('recentList');
+      if (recentCards.length === 0) {
+        el.innerHTML = '<div class="empty-state"><div class="empty-state-text">No cards sent yet.<br>Send a card and it\'ll appear here.</div></div>';
+        return;
+      }
+      el.innerHTML = '';
+      recentCards.forEach((card, idx) => {
+        const fav = favourites.some(f => f.id === card.id);
+        const div = document.createElement('div');
+        div.className = 'card-item';
+        div.innerHTML = `
+          <div class="card-main">
+            <img class="card-thumb" src="${card.image_small}" alt="${card.name}" onclick="zoomCard(this.src)">
+            <div class="card-info">
+              <div class="card-name">${card.name}</div>
+              <div class="card-set">${card.set_name} (${card.set.toUpperCase()})</div>
+              <div class="recent-time">${timeAgo(card.sentAt)}</div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="send-btn" onclick="sendStoredCard(${idx}, 'recent')">Send to E-Paper</button>
+            <button class="fav-btn ${fav ? 'favourited' : ''}" onclick="toggleFavFromStored(${idx}, 'recent')">&#9733;</button>
+            <button class="deck-add-btn" onclick="addToDeckFromStored(${idx}, 'recent')" title="Add to deck">+D</button>
+          </div>`;
+        el.appendChild(div);
+      });
+    }
+
+    window.toggleFavFromStored = function(idx, source) {
+      const list = source === 'recent' ? recentCards : favourites;
+      const card = list[idx];
+      if (!card) return;
+      toggleFavourite({ id: card.id, name: card.name, set: card.set, set_name: card.set_name, image_uris: { small: card.image_small, png: card.image_large, large: card.image_large } });
+      if (source === 'recent') renderRecent();
+      else renderFavourites();
+      refreshSearchFavStars();
+    };
+
+    window.addToDeckFromStored = function(idx, source) {
+      const list = source === 'fav' ? favourites : recentCards;
+      const card = list[idx];
+      if (!card) return;
+      openDeckPicker({ id: card.id, name: card.name, set: card.set, set_name: card.set_name, image_uris: { small: card.image_small, png: card.image_large, large: card.image_large } });
+    };
+
+    window.sendStoredCard = async function(idx, source) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const list = source === 'fav' ? favourites : recentCards;
+      const card = list[idx];
+      if (!card || !card.image_large) { showStatus('No image available', 'error'); return; }
+      const fakeCard = { id: card.id, name: card.name, set: card.set, set_name: card.set_name, image_uris: { small: card.image_small, png: card.image_large, large: card.image_large } };
+      addToRecent(fakeCard);
+      await sendCard(card.image_large, card.name);
+    };
+
+    // =====================================================
+    // IMAGE PROCESSING - 4-grey 480x800 pipeline
+    // =====================================================
+
+    function buildRowMap(srcH) {
+      const zones = [
+        {a:0.000, b:0.055, w:0.55}, {a:0.055, b:0.110, w:1.00},
+        {a:0.110, b:0.575, w:1.00}, {a:0.575, b:0.635, w:1.00},
+        {a:0.635, b:0.930, w:0.80}, {a:0.930, b:1.000, w:0.35},
+      ];
+      let weighted = 0;
+      zones.forEach(z => weighted += (z.b - z.a) * srcH * z.w);
+      const k = EPD_H / weighted;
+      const map = new Float32Array(EPD_H);
+      let outRow = 0;
+      for (const z of zones) {
+        const srcSpan = (z.b - z.a) * srcH;
+        const dstRows = Math.round(srcSpan * z.w * k);
+        for (let r = 0; r < dstRows && outRow < EPD_H; r++, outRow++) {
+          map[outRow] = z.a * srcH + (r / dstRows) * srcSpan;
+        }
+      }
+      while (outRow < EPD_H) { map[outRow] = srcH - 1; outRow++; }
+      return map;
+    }
+
+    // Returns a portrait-oriented source canvas; landscape cards (planes!) rotate 90deg
+    function portraitSource(img) {
+      if (img.width <= img.height) return img;
+      const c = document.createElement('canvas');
+      c.width = img.height; c.height = img.width;
+      const x = c.getContext('2d');
+      x.translate(c.width / 2, c.height / 2);
+      x.rotate(Math.PI / 2);
+      x.drawImage(img, -img.width / 2, -img.height / 2);
+      return c;
+    }
+
+    function preCropCard(source) {
+      const st = dispSettings.strim / 100, bt = dispSettings.btrim / 100, tt = dispSettings.ttrim / 100;
+      const sw = source.width * (1 - 2 * st), sh = source.height * (1 - tt - bt);
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(sw));
+      c.height = Math.max(1, Math.round(sh));
+      const x = c.getContext('2d');
+      x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
+      x.drawImage(source, source.width * st, source.height * tt, sw, sh, 0, 0, c.width, c.height);
+      return c;
+    }
+
+    function composeFrame(card, mode) {
+      const c = document.createElement('canvas'); c.width = EPD_W; c.height = EPD_H;
+      const x = c.getContext('2d');
+      x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
+      const cardH = Math.round(card.height * (EPD_W / card.width));
+      const y0 = Math.round((EPD_H - cardH) / 2);
+
+      if (mode === 'fullbleed') {
+        const scale = Math.max(EPD_W / card.width, EPD_H / card.height);
+        x.drawImage(card, (EPD_W - card.width * scale) / 2, 0, card.width * scale, card.height * scale);
+      } else if (mode === 'fill-blur') {
+        const cover = Math.max(EPD_W / card.width, EPD_H / card.height) * 1.1;
+        x.filter = 'blur(18px) brightness(0.8)';
+        x.drawImage(card, (EPD_W - card.width * cover) / 2, (EPD_H - card.height * cover) / 2, card.width * cover, card.height * cover);
+        x.filter = 'none';
+        if (cardH <= EPD_H) x.drawImage(card, 0, y0, EPD_W, cardH);
+        else { const s2 = EPD_H / card.height, w2 = card.width * s2; x.drawImage(card, (EPD_W - w2) / 2, 0, w2, EPD_H); }
+      } else if (mode === 'fill-black' || mode === 'fill-white') {
+        x.fillStyle = mode === 'fill-black' ? '#000' : '#fff';
+        x.fillRect(0, 0, EPD_W, EPD_H);
+        if (cardH <= EPD_H) x.drawImage(card, 0, y0, EPD_W, cardH);
+        else { const s2 = EPD_H / card.height, w2 = card.width * s2; x.drawImage(card, (EPD_W - w2) / 2, 0, w2, EPD_H); }
+      } else { // smart / plain stretch handled via row map below using this true-aspect draw
+        return null;
+      }
+      return x.getImageData(0, 0, EPD_W, EPD_H);
+    }
+
+    function processImageNew(imgLike) {
+      const card = preCropCard(imgLike);
+      const mode = dispSettings.mode;
+      const gamma = dispSettings.gamma, bright = dispSettings.bright, contrast = dispSettings.contrast;
+      const cf = (259 * (contrast + 255)) / (255 * (259 - contrast));
+      const tone = v => {
+        let t = 255 * Math.pow(v / 255, gamma);
+        t = cf * (t - 128) + 128 + bright;
+        return Math.max(0, Math.min(255, t));
+      };
+
+      const grey = new Float32Array(EPD_W * EPD_H);
+      const composed = composeFrame(card, mode);
+      if (composed) {
+        for (let i = 0; i < EPD_W * EPD_H; i++) {
+          grey[i] = tone(0.299 * composed.data[i*4] + 0.587 * composed.data[i*4+1] + 0.114 * composed.data[i*4+2]);
+        }
+      } else {
+        const trueH = Math.round(card.height * (EPD_W / card.width));
+        const work = document.createElement('canvas'); work.width = EPD_W; work.height = trueH;
+        const wx = work.getContext('2d');
+        wx.imageSmoothingEnabled = true; wx.imageSmoothingQuality = 'high';
+        wx.drawImage(card, 0, 0, EPD_W, trueH);
+        const sd = wx.getImageData(0, 0, EPD_W, trueH);
+        const map = (mode === 'smart' && trueH > EPD_H) ? buildRowMap(trueH) : null;
+        for (let y = 0; y < EPD_H; y++) {
+          const sy = map ? Math.min(trueH - 1, Math.floor(map[y]))
+                         : Math.min(trueH - 1, Math.floor(y * trueH / EPD_H));
+          for (let xx = 0; xx < EPD_W; xx++) {
+            const si = (sy * EPD_W + xx) * 4;
+            grey[y * EPD_W + xx] = tone(0.299 * sd.data[si] + 0.587 * sd.data[si+1] + 0.114 * sd.data[si+2]);
+          }
+        }
+      }
+
+      // Floyd-Steinberg to 4 levels
+      const useFS = dispSettings.dither === 'fs';
+      const lvl = v => Math.round(Math.max(0, Math.min(255, v)) / 85) * 85;
+      const out = new Uint8Array(EPD_W * EPD_H);
+      for (let y = 0; y < EPD_H; y++) {
+        for (let xx = 0; xx < EPD_W; xx++) {
+          const i = y * EPD_W + xx;
+          const old = grey[i];
+          const nv = lvl(old);
+          out[i] = nv;
+          if (useFS) {
+            const err = old - nv;
+            if (xx + 1 < EPD_W)               grey[i + 1]          += err * 7 / 16;
+            if (y + 1 < EPD_H) {
+              if (xx > 0)                     grey[i + EPD_W - 1]  += err * 3 / 16;
+                                              grey[i + EPD_W]      += err * 5 / 16;
+              if (xx + 1 < EPD_W)             grey[i + EPD_W + 1]  += err * 1 / 16;
+            }
+          }
+        }
+      }
+      // pack 2 bits/px, 4 px/byte, MSB first (0=black..3=white)
+      const packed = new Uint8Array(IMAGE_PACKED_SIZE);
+      for (let i = 0; i < EPD_W * EPD_H; i++) {
+        packed[i >> 2] |= (out[i] / 85) << (6 - (i & 3) * 2);
+      }
+      return packed;
+    }
+
+    // =====================================================
+    // BLE TRANSFER - flow-controlled protocol (BUILD G dock)
+    // =====================================================
+
+    async function writeCtrl(s) { await ctrlChar.writeValue(new TextEncoder().encode(s)); }
+
+    async function sendBLE(packed, cardName) {
+      ackBase = 0;
+      const rdy = bleWaitFor('RDY', 5000);
+      await writeCtrl('BEGIN ' + packed.length);
+      await rdy;
+
+      const CHUNK = 244, WINDOW = 12288;
+      const canNR = !!dataChar.writeValueWithoutResponse;
+      const t0 = Date.now();
+
+      for (let off = 0; off < packed.length; off += CHUNK) {
+        while (off - ackBase > WINDOW) { await bleWaitFor('A:', 8000); }
+        const slice = packed.slice(off, Math.min(off + CHUNK, packed.length));
+        if (canNR) await dataChar.writeValueWithoutResponse(slice);
+        else await dataChar.writeValue(slice);
+        if ((off / CHUNK) % 8 === 0) {
+          const pct = Math.round(off / packed.length * 100);
+          const elapsed = (Date.now() - t0) / 1000;
+          const rate = off / Math.max(0.001, elapsed);
+          const eta = rate > 0 ? (packed.length - off) / rate : 0;
+          showStatus(`Sending ${cardName}...`, 'info', pct, eta);
+        }
+      }
+      const ok = bleWaitFor('OK', 8000);
+      await writeCtrl('END');
+      await ok;
+      showStatus(`${cardName} sent - dock is drawing...`, 'info', 100);
+      await bleWaitFor('DONE', 60000);
+      const totalSec = ((Date.now() - t0) / 1000).toFixed(1);
+      showStatus(`${cardName} displayed! (${totalSec}s transfer)`, 'success', 100);
+    }
+
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    async function sendCard(imageUrl, cardName) {
+      if (!ctrlChar || !dataChar) { showStatus('Connect Bluetooth first', 'error'); return; }
+      try {
+        showStatus(`Loading ${cardName}...`, 'info', 0);
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = () => reject(new Error('Image load failed')); img.src = imageUrl; });
+        showStatus(`Processing ${cardName}...`, 'info', 0);
+        const packed = processImageNew(portraitSource(img));
+        if (packed.length !== IMAGE_PACKED_SIZE) { showStatus(`Pack error: ${packed.length} != ${IMAGE_PACKED_SIZE}`, 'error'); return; }
+        await sendBLE(packed, cardName);
+      } catch (error) {
+        showStatus('Error: ' + error.message, 'error');
+      }
+    }
+
+    // =====================================================
+    // STATUS
+    // =====================================================
+
+    function showStatus(message, type, progress = 0, timeRemaining = null) {
+      let extra = '';
+      if (timeRemaining !== null && timeRemaining > 0) {
+        extra = `<div class="status-time">${Math.ceil(timeRemaining)}s remaining</div>`;
+      }
+      statusEl.innerHTML = `<div class="status ${type}" style="--progress-width: ${progress}%"><div>${message}${extra}</div></div>`;
+      if (type === 'success' || type === 'error') {
+        setTimeout(() => { if (statusEl.querySelector(`.${type}`)) statusEl.innerHTML = ''; }, 5000);
+      }
+    }
+
+    // Display settings wiring
+    (function initDispSettings() {
+      const bind = (id, key, isFloat) => {
+        const el = document.getElementById(id);
+        const lbl = document.getElementById(id + 'V');
+        if (!el) return;
+        el.value = dispSettings[key];
+        if (lbl) lbl.textContent = dispSettings[key];
+        el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => {
+          dispSettings[key] = isFloat ? parseFloat(el.value) : el.value;
+          if (lbl) lbl.textContent = el.value;
+          saveDispSettings();
+        });
+      };
+      bind('dsMode', 'mode', false);
+      bind('dsBtrim', 'btrim', true);
+      bind('dsStrim', 'strim', true);
+      bind('dsGamma', 'gamma', true);
+      bind('dsContrast', 'contrast', true);
+    })();
+  </script>
+
+  <script>
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js').catch(() => {}); }
+  </script>
 </body>
 </html>
