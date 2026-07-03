@@ -997,6 +997,14 @@
           </select>
         </label>
       </div>
+      <div class="menu-title" style="margin-top:18px;">Dock Buttons (debug)</div>
+      <div style="display:flex; gap:6px; padding:0 4px 8px;">
+        <button onclick="dockBtn(1)" style="flex:1; padding:8px; border:none; border-radius:8px; background:#334; color:#fff;">1</button>
+        <button onclick="dockBtn(2)" style="flex:1; padding:8px; border:none; border-radius:8px; background:#334; color:#fff;">2</button>
+        <button onclick="dockBtn(3)" style="flex:1; padding:8px; border:none; border-radius:8px; background:#334; color:#fff;">3</button>
+        <button onclick="dockBtn(4)" style="flex:1; padding:8px; border:none; border-radius:8px; background:#334; color:#fff;">4</button>
+        <button onclick="dockBtn(5)" style="flex:1; padding:8px; border:none; border-radius:8px; background:#334; color:#fff;">5</button>
+      </div>
       <button class="menu-close" id="menuClose">Close</button>
     </div>
   </div>
@@ -2041,6 +2049,12 @@
 
     async function writeCtrl(s) { await ctrlChar.writeValue(new TextEncoder().encode(s)); }
 
+    async function dockBtn(n) {
+      if (!ctrlChar) { showStatus('Connect Bluetooth first', 'error'); return; }
+      try { await writeCtrl('BTN:' + n); } catch (e) { showStatus('Button send failed: ' + e.message, 'error'); }
+    }
+    window.dockBtn = dockBtn;
+
     function withTimeout(p, ms, what) {
       return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(what + ' timed out')), ms))]);
     }
@@ -2052,9 +2066,22 @@
       sendInProgress = true;
       try {
         ackBase = 0;
-        const rdy = bleWaitFor('RDY', 5000);
-        await withTimeout(writeCtrl('BEGIN ' + packed.length), 5000, 'BEGIN write');
-        await rdy;
+        // BEGIN with auto-wait if the dock is mid-draw
+        let began = false;
+        for (let attempt = 0; attempt < 3 && !began; attempt++) {
+          const resp = bleWaitFor('RDY', 5000).then(() => 'RDY').catch(() => null);
+          const busy = bleWaitFor('ERR:busy', 5000).then(() => 'BUSY').catch(() => null);
+          await withTimeout(writeCtrl('BEGIN ' + packed.length), 5000, 'BEGIN write');
+          const outcome = await Promise.race([resp, busy, sleep(5200).then(() => 'TIMEOUT')]);
+          if (outcome === 'RDY') { began = true; break; }
+          if (outcome === 'BUSY') {
+            showStatus('Dock is drawing - waiting...', 'info');
+            try { await bleWaitFor('DONE', 60000); } catch (e) { await sleep(3000); }
+            continue;
+          }
+          throw new Error('Dock did not respond to BEGIN');
+        }
+        if (!began) throw new Error('Dock stayed busy - try again shortly');
 
         const CHUNK = 244, WINDOW = 12288, STALL_MS = 10000;
         const canNR = !!dataChar.writeValueWithoutResponse;
