@@ -7,7 +7,7 @@
   <meta name="description" content="Token Conjurer">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==">
-  <title>Token Conjurer.</title>
+  <title>Token Conjurer</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -308,11 +308,20 @@
     .status.success { border-color: #10b981; color: #10b981; }
     .status.error { border-color: #ef4444; color: #ef4444; }
     .status.info { border-color: #8b5cf6; color: #8b5cf6; }
+    #status {
+      position: sticky; top: 0; z-index: 500;
+      background: #1a1a2e;
+      padding: 8px 0;
+      /* full-bleed horizontal band: spread the bg to the viewport edges, clip to this strip */
+      box-shadow: 0 0 0 100vmax #1a1a2e;
+      clip-path: inset(0 -100vmax);
+    }
+    #status:empty { padding: 0; box-shadow: none; }
 
     canvas.hidden { display: none; }
 
     .empty-state { text-align: center; padding: 40px 20px; color: #555; }
-    .empty-state-icon { font-size: 32px; margin-bottom: 8px; }
+
     .empty-state-text { font-size: 14px; }
     .recent-time { font-size: 11px; color: #555; margin-top: 2px; }
 
@@ -534,22 +543,495 @@
     }
 
     .modal-cancel:hover { background: #444; color: #fff; }
+
+    /* HAMBURGER MENU */
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-right { display: flex; align-items: center; gap: 10px; }
+
+    .menu-btn {
+      width: 36px;
+      height: 36px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: none;
+      color: #888;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .menu-btn:hover { border-color: #555; color: #ccc; }
+    .menu-btn.open { border-color: #8b5cf6; color: #fff; }
+
+    .format-badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+      background: rgba(236, 72, 153, 0.15);
+      color: #ec4899;
+      border: 1px solid rgba(236, 72, 153, 0.3);
+      display: none;
+      white-space: nowrap;
+    }
+
+    .format-badge.visible { display: inline-block; }
+
+    .menu-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+    }
+
+    .menu-overlay.open { display: block; }
+
+    .menu-drawer {
+      position: fixed;
+      top: 0; left: -280px;
+      width: 280px;
+      height: 100%;
+      background: #1a1a2e;
+      border-right: 2px solid #333;
+      z-index: 201;
+      transition: left 0.3s ease;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .menu-overlay.open .menu-drawer { left: 0; }
+
+    .menu-title {
+      font-size: 13px;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      margin-top: 20px;
+    }
+
+    .menu-title:first-child { margin-top: 0; }
+
+    .menu-option {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #333;
+      border-radius: 10px;
+      background: #2a2a3e;
+      color: #ccc;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .menu-option:hover { border-color: #555; color: #fff; }
+
+    .menu-option.active {
+      border-color: #8b5cf6;
+      background: rgba(139, 92, 246, 0.12);
+      color: #fff;
+    }
+
+    .menu-option .menu-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid #555;
+      flex-shrink: 0;
+    }
+
+    .menu-option.active .menu-dot {
+      background: #8b5cf6;
+      border-color: #8b5cf6;
+    }
+
+    .menu-option-label { flex: 1; }
+
+    .menu-option-sub {
+      font-size: 11px;
+      color: #666;
+      display: block;
+      margin-top: 2px;
+    }
+
+    .menu-option.active .menu-option-sub { color: #a78bfa; }
+
+    .menu-close {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #333;
+      color: #888;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+
+    .menu-close:hover { background: #444; color: #fff; }
+
+    /* PLANECHASE GAME PANEL */
+    .pc-game-panel {
+      background: linear-gradient(135deg, rgba(236,72,153,0.08), rgba(139,92,246,0.08));
+      border: 2px solid rgba(236,72,153,0.3);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .pc-game-panel.visible { display: block; }
+
+    .pc-game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .pc-game-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ec4899;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .pc-game-stop {
+      padding: 5px 12px;
+      border: 1px solid rgba(239,68,68,0.4);
+      border-radius: 6px;
+      background: rgba(239,68,68,0.1);
+      color: #ef4444;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pc-game-stop:hover { background: rgba(239,68,68,0.2); border-color: #ef4444; }
+
+    .pc-current-plane {
+      background: rgba(0,0,0,0.25);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .pc-current-thumb {
+      width: 56px;
+      height: 78px;
+      border-radius: 6px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .pc-current-info { flex: 1; min-width: 0; }
+
+    .pc-current-name {
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 2px;
+      word-wrap: break-word;
+    }
+
+    .pc-current-meta {
+      font-size: 12px;
+      color: #888;
+    }
+
+    .pc-position {
+      font-size: 11px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .pc-game-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .pc-planeswalk-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #ec4899, #8b5cf6);
+      color: white;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pc-planeswalk-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+    .pc-planeswalk-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .pc-resend-btn {
+      padding: 12px 16px;
+      border: 2px solid #333;
+      border-radius: 8px;
+      background: none;
+      color: #888;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .pc-resend-btn:hover { border-color: #8b5cf6; color: #8b5cf6; }
+
+    /* MOMIR GAME PANEL */
+    .momir-panel {
+      background: linear-gradient(135deg, rgba(34,197,94,0.08), rgba(56,189,248,0.08));
+      border: 2px solid rgba(34,197,94,0.3);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .momir-panel.visible { display: block; }
+
+    .momir-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #22c55e;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .momir-start-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #22c55e, #38bdf8);
+      color: #06220f;
+      font-weight: 700;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .momir-hint {
+      font-size: 12px;
+      color: #888;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .momir-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+
+    /* generic-mana-symbol style circles */
+    .momir-chip {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: 2px solid #333;
+      background: rgba(0,0,0,0.3);
+      color: #999;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      box-shadow: inset 0 -2px 3px rgba(0,0,0,0.4);
+    }
+
+    .momir-chip:hover { border-color: #22c55e; color: #ccc; }
+
+    .momir-chip.selected {
+      background: #d8d2c8;
+      border-color: #f5f0e6;
+      color: #111;
+      transform: scale(1.12);
+      box-shadow: 0 0 10px rgba(34,197,94,0.6), inset 0 -2px 3px rgba(0,0,0,0.25);
+    }
+
+    .momir-summon-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #22c55e, #38bdf8);
+      color: #06220f;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .momir-summon-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+    .momir-summon-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* Planechase start game in decks */
+    .deck-play-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 5px;
+      background: linear-gradient(135deg, #ec4899, #8b5cf6);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .deck-play-btn:hover { opacity: 0.9; }
+
+    /* IMAGE ZOOM OVERLAY */
+    .zoom-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      cursor: pointer;
+    }
+
+    .zoom-overlay.open { display: flex; }
+
+    .zoom-overlay img {
+      max-width: 100%;
+      max-height: 90vh;
+      border-radius: 12px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+    }
+
+    .card-thumb, .deck-card-thumb, .pc-current-thumb { cursor: pointer; }
+
+    /* Planechase thumbnails: rotate portrait source images to landscape */
+    .pc-mode .card-thumb {
+      width: 72px;
+      height: 100px;
+      transform: rotate(90deg);
+      margin: -14px 14px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+
+    .pc-mode .deck-card-thumb {
+      width: 52px;
+      height: 72px;
+      transform: rotate(90deg);
+      margin: -10px 10px;
+      object-fit: cover;
+      border-radius: 3px;
+    }
+
+    .pc-mode .pc-current-thumb {
+      width: 78px;
+      height: 110px;
+      transform: rotate(90deg);
+      margin: -16px 16px;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+
+    .zoom-overlay.pc-rotate img {
+      transform: rotate(90deg);
+      max-width: 90vh;
+      max-height: 100vw;
+    }
+
+    .pw-icon {
+      display: inline-block;
+      width: 0.75em;
+      height: 1em;
+      vertical-align: -0.15em;
+      background: currentColor;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 860 1582%27%3E%3Cg transform=%27translate(0,1582) scale(0.1,-0.1)%27%3E%3Cpath d=%27M4282 15353c-29-145-64-577-97-1163-140-2509-268-3722-480-4558-66-260-85-312-109-312-29 0-360-28-422-36l-51-6-21 74c-148 511-267 1435-472 3688-61 675-86 915-96 960-6 24-6 25-14 4-15-38-57-415-135-1186-90-900-131-1277-191-1753-118-943-237-1586-356-1939l-33-97-160-53c-88-30-188-65-222-80-34-14-64-26-67-26-7 0-61 147-95 256-143 466-242 1048-396 2319-63 518-86 684-116 829-21 104-33 132-43 100-49-160-175-1446-321-3274-73-923-84-1065-77-1071 4-3 65-29 137-59 268-110 586-278 845-448 1092-712 1945-1852 2414-3220 264-771 416-1560 511-2657 41-481 54-565 86-565 27 0 45 122 84 570 103 1192 280 2052 598 2895 142 377 359 813 585 1175 483 772 1126 1424 1842 1867 262 162 515 291 780 398 52 21 98 41 102 44 3 3-5 143-18 311-205 2624-348 4092-394 4043-12-12-46-181-69-338-11-77-50-381-86-675-133-1088-214-1586-330-2035-47-181-139-465-151-465-2 0-38 14-81 31-43 17-143 53-223 80l-145 48-18 48c-59 153-150 539-216 918-113 644-204 1385-351 2855-96 963-124 1189-140 1159-12-21-42-316-115-1119-188-2060-307-2990-447-3498l-31-114-51 6c-63 8-393 36-423 36-25 0-40 44-108 315-208 821-334 1987-465 4280-59 1040-95 1454-128 1487-6 6-14-14-20-49z%27/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;
+      mask: url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 860 1582%27%3E%3Cg transform=%27translate(0,1582) scale(0.1,-0.1)%27%3E%3Cpath d=%27M4282 15353c-29-145-64-577-97-1163-140-2509-268-3722-480-4558-66-260-85-312-109-312-29 0-360-28-422-36l-51-6-21 74c-148 511-267 1435-472 3688-61 675-86 915-96 960-6 24-6 25-14 4-15-38-57-415-135-1186-90-900-131-1277-191-1753-118-943-237-1586-356-1939l-33-97-160-53c-88-30-188-65-222-80-34-14-64-26-67-26-7 0-61 147-95 256-143 466-242 1048-396 2319-63 518-86 684-116 829-21 104-33 132-43 100-49-160-175-1446-321-3274-73-923-84-1065-77-1071 4-3 65-29 137-59 268-110 586-278 845-448 1092-712 1945-1852 2414-3220 264-771 416-1560 511-2657 41-481 54-565 86-565 27 0 45 122 84 570 103 1192 280 2052 598 2895 142 377 359 813 585 1175 483 772 1126 1424 1842 1867 262 162 515 291 780 398 52 21 98 41 102 44 3 3-5 143-18 311-205 2624-348 4092-394 4043-12-12-46-181-69-338-11-77-50-381-86-675-133-1088-214-1586-330-2035-47-181-139-465-151-465-2 0-38 14-81 31-43 17-143 53-223 80l-145 48-18 48c-59 153-150 539-216 918-113 644-204 1385-351 2855-96 963-124 1189-140 1159-12-21-42-316-115-1119-188-2060-307-2990-447-3498l-31-114-51 6c-63 8-393 36-423 36-25 0-40 44-108 315-208 821-334 1987-465 4280-59 1040-95 1454-128 1487-6 6-14-14-20-49z%27/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <h1>Token Conjurer</h1>
-      <button class="bt-btn" id="btBtn">Connect BT</button>
+      <div class="header-left">
+        <button class="menu-btn" id="menuBtn" title="Format">&#9776;</button>
+        <h1>Token Conjurer</h1>
+        <span class="format-badge" id="formatBadge">Planechase</span>
+      </div>
+      <div class="header-right">
+        <button class="bt-btn" id="btBtn">Connect BT</button>
+      </div>
     </div>
 
     <div id="status"></div>
+
+    <!-- Planechase Game Panel (shown during active game) -->
+    <div class="pc-game-panel" id="pcGamePanel">
+      <div class="pc-game-header">
+        <div class="pc-game-title"><span class="pw-icon"></span> Planechase</div>
+        <button class="pc-game-stop" id="pcStopBtn">End Game</button>
+      </div>
+      <div class="pc-current-plane" id="pcCurrentPlane">
+        <img class="pc-current-thumb" id="pcPlaneThumb" src="" alt="" onclick="zoomCard(this.src)">
+        <div class="pc-current-info">
+          <div class="pc-current-name" id="pcPlaneName">—</div>
+          <div class="pc-current-meta" id="pcPlaneMeta"></div>
+          <div class="pc-position" id="pcPosition"></div>
+        </div>
+      </div>
+      <div class="pc-game-actions">
+        <button class="pc-planeswalk-btn" id="pcPlaneswalkBtn"><span class="pw-icon"></span> Planeswalk</button>
+        <button class="pc-resend-btn" id="pcResendBtn">Resend</button>
+      </div>
+    </div>
+
+    <!-- Momir Game Panel -->
+    <div class="momir-panel" id="momirPanel">
+      <div class="pc-game-header">
+        <div class="momir-title">&#129516; Momir</div>
+        <button class="pc-game-stop" id="momirStopBtn" style="display:none;">End Game</button>
+      </div>
+      <button class="momir-start-btn" id="momirStartBtn">Start Momir Game</button>
+      <div id="momirGame" style="display:none;">
+        <div class="momir-hint">Pay X &mdash; pick a mana value, then summon a random creature</div>
+        <div class="momir-chips" id="momirChips"></div>
+        <button class="momir-summon-btn" id="momirSummonBtn" disabled>&#127922; Summon</button>
+        <div class="pc-current-plane" id="momirLastRow" style="display:none; margin-top:12px; margin-bottom:0;">
+          <img class="pc-current-thumb" id="momirThumb" src="" alt="" onclick="zoomCard(this.src)">
+          <div class="pc-current-info">
+            <div class="pc-current-name" id="momirName">&mdash;</div>
+            <div class="pc-current-meta" id="momirMeta"></div>
+            <div class="pc-position" id="momirCount"></div>
+          </div>
+          <button class="pc-resend-btn" id="momirResendBtn" style="padding:8px 10px;">Resend</button>
+        </div>
+      </div>
+    </div>
 
     <div class="tabs">
       <button class="tab active" data-tab="search">Search</button>
       <button class="tab" data-tab="decks">Decks <span class="tab-count" id="deckCount"></span></button>
       <button class="tab" data-tab="favourites">Favs <span class="tab-count" id="favCount"></span></button>
       <button class="tab" data-tab="recent">Recent <span class="tab-count" id="recentCount"></span></button>
+      <button class="tab" data-tab="dock">Dock <span class="tab-count" id="dockCount"></span></button>
     </div>
 
     <div class="tab-content active" id="tab-search">
@@ -558,17 +1040,32 @@
         <div class="search-buttons">
           <button class="search-btn" id="searchBtn">Search Cards</button>
           <button class="search-btn token" id="tokenBtn">Search Tokens</button>
+          <button class="search-btn token" id="listAllBtn" style="display:none;">List All</button>
         </div>
       </div>
       <div id="results"></div>
     </div>
 
     <div class="tab-content" id="tab-decks">
+      <div style="background:#16213e; border-radius:10px; padding:12px; margin-bottom:12px;">
+        <div id="importInputs">
+          <div style="font-size:13px; color:#8b5cf6; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px;">Import deck &rarr; tokens &rarr; dock</div>
+          <input type="text" id="importUrl" placeholder="Archidekt / Moxfield URL (or paste below)" style="width:100%; padding:9px; border-radius:8px; border:1px solid #333; background:#0f1626; color:#fff; font-size:13px; margin-bottom:6px;">
+          <textarea id="importText" placeholder="...or paste a decklist (1 Sol Ring, 4 Lightning Bolt...)" style="width:100%; height:60px; padding:9px; border-radius:8px; border:1px solid #333; background:#0f1626; color:#fff; font-size:13px; margin-bottom:6px;"></textarea>
+          <button class="send-btn" onclick="importDeck()" style="width:100%;">Find Tokens</button>
+        </div>
+        <div id="importStatus" style="font-size:12px; color:#4ade80; min-height:16px; margin-top:6px;"></div>
+        <div id="importResults"></div>
+      </div>
       <div id="decksList"></div>
     </div>
 
     <div class="tab-content" id="tab-favourites">
       <div id="favouritesList"></div>
+    </div>
+
+    <div class="tab-content" id="tab-dock">
+      <div id="dockList"><div class="empty-state"><div class="empty-state-text">Connect Bluetooth, then open this tab<br>to see cards stored on the dock.</div></div></div>
     </div>
 
     <div class="tab-content" id="tab-recent">
@@ -585,12 +1082,136 @@
     </div>
   </div>
 
+  <!-- Format Menu Drawer -->
+  <div class="menu-overlay" id="menuOverlay">
+    <div class="menu-drawer">
+      <div class="menu-title">Game Format</div>
+      <button class="menu-option active" data-format="mtg_standard">
+        <span class="menu-dot"></span>
+        <span class="menu-option-label">MTG<span class="menu-option-sub">Standard card search &amp; decks</span></span>
+      </button>
+      <button class="menu-option" data-format="mtg_planechase">
+        <span class="menu-dot"></span>
+        <span class="menu-option-label">MTG — Planechase<span class="menu-option-sub">Build &amp; play Planechase decks</span></span>
+      </button>
+      <button class="menu-option" data-format="mtg_momir">
+        <span class="menu-dot"></span>
+        <span class="menu-option-label">MTG — Momir<span class="menu-option-sub">Pay X, summon a random creature</span></span>
+      </button>
+      <div class="menu-title" style="margin-top:18px;">Display Settings</div>
+      <div style="padding:0 4px; font-size:13px;">
+        <label style="display:block; margin-bottom:8px;">Mode
+          <select id="dsMode" style="width:100%; padding:8px; border-radius:8px; background:#0f1626; color:#fff; border:1px solid #333; margin-top:4px;">
+            <option value="fullbleed">Full bleed (fills frame)</option>
+            <option value="fill-blur">True size + blur fill</option>
+            <option value="fill-mirror">True size + mirror fill</option>
+            <option value="fill-black">True size + black fill</option>
+            <option value="fill-white">True size + blank (panel white)</option>
+            <option value="smart">Smart stretch</option>
+            <option value="plain">Plain stretch</option>
+          </select>
+        </label>
+        <label style="display:block; margin-bottom:6px;">Bottom trim <span id="dsBtrimV"></span>%
+          <input type="range" id="dsBtrim" min="0" max="12" step="0.5" style="width:100%;">
+        </label>
+        <label style="display:block; margin-bottom:6px;">Side trim <span id="dsStrimV"></span>%
+          <input type="range" id="dsStrim" min="0" max="15" step="0.5" style="width:100%;">
+        </label>
+        <label style="display:block; margin-bottom:6px;">Gamma <span id="dsGammaV"></span>
+          <input type="range" id="dsGamma" min="0.5" max="2.2" step="0.05" style="width:100%;">
+        </label>
+        <label style="display:block; margin-bottom:6px;">Top trim <span id="dsTtrimV"></span>%
+          <input type="range" id="dsTtrim" min="0" max="12" step="0.5" style="width:100%;">
+        </label>
+        <label style="display:block; margin-bottom:6px;">Brightness <span id="dsBrightV"></span>
+          <input type="range" id="dsBright" min="-60" max="60" step="2" style="width:100%;">
+        </label>
+        <label style="display:block; margin-bottom:6px;">Contrast <span id="dsContrastV"></span>
+          <input type="range" id="dsContrast" min="-50" max="50" step="2" style="width:100%;">
+        </label>
+        <label style="display:block; margin-bottom:8px;">Dither
+          <select id="dsDither" style="width:100%; padding:8px; border-radius:8px; background:#0f1626; color:#fff; border:1px solid #333; margin-top:4px;">
+            <option value="fs">Floyd-Steinberg</option>
+            <option value="none">None (nearest level)</option>
+          </select>
+        </label>
+      </div>
+      <div class="menu-title" style="margin-top:18px;">Dock WiFi</div>
+      <div style="padding:0 4px 8px;">
+        <button id="wifiScanBtn" onclick="dockWifiScan()" style="width:100%; padding:8px; border:none; border-radius:8px; background:#2a2a4a; color:#9db4ff; margin-bottom:6px;">Scan for networks</button>
+        <div id="wifiScanList"></div>
+        <input type="text" id="wifiSsid" placeholder="Network name (SSID)" style="width:100%; padding:8px; border-radius:8px; background:#0f1626; color:#fff; border:1px solid #333; margin-bottom:6px; font-size:13px;">
+        <input type="password" id="wifiPass" placeholder="Password" style="width:100%; padding:8px; border-radius:8px; background:#0f1626; color:#fff; border:1px solid #333; margin-bottom:6px; font-size:13px;">
+        <button onclick="dockWifi()" style="width:100%; padding:8px; border:none; border-radius:8px; background:#334; color:#fff;">Send WiFi to dock</button>
+        <button onclick="enableFastSync()" id="fastSyncBtn" style="width:100%; padding:8px; border:none; border-radius:8px; background:#2a4a3a; color:#9fe1cb; margin-top:6px;">Enable fast sync (WiFi)</button>
+        <div id="fastSyncStatus" style="font-size:11px; color:#889; margin-top:4px; min-height:14px;"></div>
+      </div>
+      <div class="menu-title" style="margin-top:18px;">Dock Buttons (debug)</div>
+      <div style="display:flex; gap:6px; padding:0 4px 8px;">
+        <button onclick="dockBtn(1)" style="flex:1; padding:8px; border:none; border-radius:8px; background:#334; color:#fff;">1</button>
+        <button onclick="dockBtn(2)" style="flex:1; padding:8px; border:none; border-radius:8px; background:#334; color:#fff;">2</button>
+        <button onclick="dockBtn(3)" style="flex:1; padding:8px; border:none; border-radius:8px; background:#334; color:#fff;">3</button>
+        <button onclick="dockBtn(4)" style="flex:1; padding:8px; border:none; border-radius:8px; background:#334; color:#fff;">4</button>
+        <button onclick="dockBtn(5)" style="flex:1; padding:8px; border:none; border-radius:8px; background:#334; color:#fff;">5</button>
+      </div>
+      <button class="menu-close" id="menuClose">Close</button>
+    </div>
+  </div>
+
+  <!-- Image Zoom Overlay -->
+  <div class="zoom-overlay" id="zoomOverlay">
+    <img id="zoomImage" src="" alt="Card preview">
+  </div>
+
   <canvas id="canvas" class="hidden"></canvas>
 
   <script>
     // =====================================================
+    // FORMAT CONFIGURATION
+    // =====================================================
+    const FORMATS = {
+      mtg_standard: {
+        tcg: 'mtg',
+        tcgName: 'Magic: The Gathering',
+        formatName: 'Standard',
+        searchPlaceholder: 'Search for MTG cards...',
+        searchFilter: '',
+        showTokenSearch: true,
+        showListAll: false,
+        storagePrefix: 'mtg',
+        color: '#8b5cf6',
+        accentColor: '#ec4899'
+      },
+      mtg_planechase: {
+        tcg: 'mtg',
+        tcgName: 'Magic: The Gathering',
+        formatName: 'Planechase',
+        searchPlaceholder: 'Search Planechase cards...',
+        searchFilter: '(type:plane OR type:phenomenon)',
+        showTokenSearch: false,
+        showListAll: true,
+        storagePrefix: 'mtg_planechase',
+        color: '#ec4899',
+        accentColor: '#8b5cf6'
+      },
+      mtg_momir: {
+        tcg: 'mtg',
+        tcgName: 'Magic: The Gathering',
+        formatName: 'Momir',
+        searchPlaceholder: 'Search creatures...',
+        searchFilter: 't:creature',
+        showTokenSearch: false,
+        showListAll: false,
+        storagePrefix: 'mtg_momir',
+        color: '#22c55e',
+        accentColor: '#38bdf8'
+      }
+    };
+
+    // =====================================================
     // STATE
     // =====================================================
+    let currentFormat = 'mtg_standard';
     let btDevice = null;
     let btCharacteristic = null;
     let cardPreferences = {};
@@ -600,25 +1221,47 @@
     let pendingDeckCard = null;
 
     const MAX_RECENT = 20;
-    const IMAGE_PACKED_SIZE = 15000; // 300*400 / 8
+    const EPD_W = 480, EPD_H = 800;
+    const IMAGE_PACKED_SIZE = EPD_W * EPD_H / 4; // 2 bits per pixel = 96000
+    const EPDB_W = 300, EPDB_H = 400;            // panel B (4.2" 400x300, portrait)
+    const IMAGE_B_PACKED_SIZE = EPDB_W * EPDB_H / 4; // 30000
+
+    // Display/conversion settings (persisted)
+    let dispSettings = { mode: 'fullbleed', strim: 0, btrim: 5.5, ttrim: 0, gamma: 1.35, bright: 0, contrast: 10, dither: 'fs' };
+    try { const s = localStorage.getItem('tc_display_settings'); if (s) dispSettings = Object.assign(dispSettings, JSON.parse(s)); } catch (e) {}
+    function saveDispSettings() { try { localStorage.setItem('tc_display_settings', JSON.stringify(dispSettings)); } catch (e) {} }
 
     const btBtn = document.getElementById('btBtn');
     const searchInput = document.getElementById('searchInput');
     const searchBtn = document.getElementById('searchBtn');
     const tokenBtn = document.getElementById('tokenBtn');
+    const listAllBtn = document.getElementById('listAllBtn');
     const resultsEl = document.getElementById('results');
     const statusEl = document.getElementById('status');
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
 
-    try { const s = localStorage.getItem('mtg_card_preferences'); if (s) cardPreferences = JSON.parse(s); } catch (e) {}
-    try { const s = localStorage.getItem('mtg_favourites'); if (s) favourites = JSON.parse(s); } catch (e) {}
-    try { const s = localStorage.getItem('mtg_recent'); if (s) recentCards = JSON.parse(s); } catch (e) {}
-    try { const s = localStorage.getItem('mtg_decks'); if (s) decks = JSON.parse(s); } catch (e) {}
+    function storageKey(key) {
+      const prefix = FORMATS[currentFormat].storagePrefix;
+      return `${prefix}_${key}`;
+    }
 
-    function saveFavourites() { try { localStorage.setItem('mtg_favourites', JSON.stringify(favourites)); } catch (e) {} updateTabCounts(); }
-    function saveRecent() { try { localStorage.setItem('mtg_recent', JSON.stringify(recentCards)); } catch (e) {} updateTabCounts(); }
-    function saveDecks() { try { localStorage.setItem('mtg_decks', JSON.stringify(decks)); } catch (e) {} updateTabCounts(); }
+    function loadFormatState() {
+      cardPreferences = {};
+      favourites = [];
+      recentCards = [];
+      decks = [];
+      try { const s = localStorage.getItem(storageKey('card_preferences')); if (s) cardPreferences = JSON.parse(s); } catch (e) {}
+      try { const s = localStorage.getItem(storageKey('favourites')); if (s) favourites = JSON.parse(s); } catch (e) {}
+      try { const s = localStorage.getItem(storageKey('recent')); if (s) recentCards = JSON.parse(s); } catch (e) {}
+      try { const s = localStorage.getItem(storageKey('decks')); if (s) decks = JSON.parse(s); } catch (e) {}
+    }
+
+    loadFormatState();
+
+    function saveFavourites() { try { localStorage.setItem(storageKey('favourites'), JSON.stringify(favourites)); } catch (e) {} updateTabCounts(); }
+    function saveRecent() { try { localStorage.setItem(storageKey('recent'), JSON.stringify(recentCards)); } catch (e) {} updateTabCounts(); }
+    function saveDecks() { try { localStorage.setItem(storageKey('decks'), JSON.stringify(decks)); } catch (e) {} updateTabCounts(); }
 
     function updateTabCounts() {
       document.getElementById('favCount').textContent = favourites.length > 0 ? `(${favourites.length})` : '';
@@ -639,7 +1282,311 @@
         if (tab.dataset.tab === 'favourites') renderFavourites();
         if (tab.dataset.tab === 'recent') renderRecent();
         if (tab.dataset.tab === 'decks') renderDecks();
+        if (tab.dataset.tab === 'dock') refreshDockList();
       });
+    });
+
+    // =====================================================
+    // FORMAT SWITCHING (Menu Drawer)
+    // =====================================================
+
+    const menuBtn = document.getElementById('menuBtn');
+    const menuOverlay = document.getElementById('menuOverlay');
+    const formatBadge = document.getElementById('formatBadge');
+
+    function openMenu() {
+      menuOverlay.classList.add('open');
+      menuBtn.classList.add('open');
+    }
+
+    function closeMenu() {
+      menuOverlay.classList.remove('open');
+      menuBtn.classList.remove('open');
+    }
+
+    menuBtn.addEventListener('click', openMenu);
+    document.getElementById('menuClose').addEventListener('click', closeMenu);
+    menuOverlay.addEventListener('click', (e) => { if (e.target === menuOverlay) closeMenu(); });
+
+    function switchFormat(formatKey) {
+      if (formatKey === currentFormat) { closeMenu(); return; }
+
+      // End any active planechase/momir game
+      if (pcGameActive) endPlanechaseGame();
+      if (momirActive) endMomirGame(true);
+
+      currentFormat = formatKey;
+      try { localStorage.setItem('tc_active_format', formatKey); } catch (e) {}
+
+      // Update menu selection
+      document.querySelectorAll('.menu-option').forEach(o => o.classList.toggle('active', o.dataset.format === formatKey));
+
+      // Update format badge
+      const fmt = FORMATS[currentFormat];
+      if (formatKey === 'mtg_standard') {
+        formatBadge.classList.remove('visible');
+      } else {
+        formatBadge.textContent = fmt.formatName;
+        formatBadge.classList.add('visible');
+      }
+
+      // Load format-specific state
+      loadFormatState();
+
+      // Update UI
+      searchInput.placeholder = fmt.searchPlaceholder;
+      tokenBtn.style.display = fmt.showTokenSearch ? '' : 'none';
+      listAllBtn.style.display = fmt.showListAll ? '' : 'none';
+      document.body.classList.toggle('pc-mode', formatKey === 'mtg_planechase');
+
+      // Clear search results and reset to search tab
+      resultsEl.innerHTML = '';
+      searchInput.value = '';
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelector('.tab[data-tab="search"]').classList.add('active');
+      document.getElementById('tab-search').classList.add('active');
+
+      updateTabCounts();
+      updateGamePanelVisibility();
+      closeMenu();
+    }
+
+    document.querySelectorAll('.menu-option').forEach(opt => {
+      opt.addEventListener('click', () => switchFormat(opt.dataset.format));
+    });
+
+    // Restore last active format
+    try {
+      const saved = localStorage.getItem('tc_active_format');
+      if (saved && FORMATS[saved]) {
+        currentFormat = saved;
+        loadFormatState();
+        document.querySelectorAll('.menu-option').forEach(o => o.classList.toggle('active', o.dataset.format === saved));
+        const fmt = FORMATS[currentFormat];
+        searchInput.placeholder = fmt.searchPlaceholder;
+        tokenBtn.style.display = fmt.showTokenSearch ? '' : 'none';
+        listAllBtn.style.display = fmt.showListAll ? '' : 'none';
+        document.body.classList.toggle('pc-mode', saved === 'mtg_planechase');
+        if (saved !== 'mtg_standard') {
+          formatBadge.textContent = fmt.formatName;
+          formatBadge.classList.add('visible');
+        }
+      }
+    } catch (e) {}
+
+    updateTabCounts();
+
+    // =====================================================
+    // PLANECHASE GAME STATE
+    // =====================================================
+
+    let pcGameActive = false;
+    let pcShuffledDeck = [];     // shuffled copy of cards
+    let pcCurrentIndex = 0;      // index in shuffled deck
+    let pcSourceDeckIdx = null;  // which deck we're playing from
+
+    function updateGamePanelVisibility() {
+      document.getElementById('pcGamePanel').classList.toggle('visible', pcGameActive && currentFormat === 'mtg_planechase');
+      updateMomirPanelVisibility();
+    }
+
+    function shuffleArray(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function startPlanechaseGame(deckIdx) {
+      const deck = decks[deckIdx];
+      if (!deck || deck.cards.length === 0) {
+        showStatus('Deck is empty — add some planes first', 'error');
+        return;
+      }
+
+      pcSourceDeckIdx = deckIdx;
+      pcShuffledDeck = shuffleArray(deck.cards);
+      pcCurrentIndex = 0;
+      pcGameActive = true;
+
+      updateGamePanelVisibility();
+      renderCurrentPlane();
+      sendCurrentPlane();
+
+      showStatus(`Planechase started! Playing "${deck.name}" (${pcShuffledDeck.length} planes)`, 'success');
+    }
+
+    function renderCurrentPlane() {
+      if (!pcGameActive || pcShuffledDeck.length === 0) return;
+      const card = pcShuffledDeck[pcCurrentIndex];
+      document.getElementById('pcPlaneThumb').src = card.image_small;
+      document.getElementById('pcPlaneName').textContent = card.name;
+      document.getElementById('pcPlaneMeta').textContent = `${card.set_name} (${card.set.toUpperCase()})`;
+      document.getElementById('pcPosition').textContent = `Plane ${pcCurrentIndex + 1} of ${pcShuffledDeck.length}`;
+    }
+
+    async function sendCurrentPlane() {
+      if (!pcGameActive || pcShuffledDeck.length === 0) return;
+      const card = pcShuffledDeck[pcCurrentIndex];
+      if (!card.image_large) { showStatus('No image for this plane', 'error'); return; }
+      await sendCard(card.image_large, card.name);
+    }
+
+    function planeswalk() {
+      if (!pcGameActive || pcShuffledDeck.length === 0) return;
+      // Move current card to the bottom of the deck
+      const current = pcShuffledDeck.splice(pcCurrentIndex, 1)[0];
+      pcShuffledDeck.push(current);
+      // pcCurrentIndex stays at 0 since we always draw from current position
+      // But if we were at the end, wrap around
+      if (pcCurrentIndex >= pcShuffledDeck.length) pcCurrentIndex = 0;
+
+      renderCurrentPlane();
+      sendCurrentPlane();
+    }
+
+    function endPlanechaseGame() {
+      pcGameActive = false;
+      pcShuffledDeck = [];
+      pcCurrentIndex = 0;
+      pcSourceDeckIdx = null;
+      updateGamePanelVisibility();
+      renderDecks();
+      showStatus('Planechase game ended', 'info');
+    }
+
+    // Wire up game panel buttons
+    document.getElementById('pcPlaneswalkBtn').addEventListener('click', planeswalk);
+    document.getElementById('pcResendBtn').addEventListener('click', sendCurrentPlane);
+    document.getElementById('pcStopBtn').addEventListener('click', () => {
+      endPlanechaseGame();
+    });
+
+    // =====================================================
+    // MOMIR MODE
+    // =====================================================
+    // Pay X: fetch a random Vintage-legal creature with mana value
+    // exactly X from Scryfall and send it to the dock.
+
+    let momirActive = false;
+    let momirX = null;      // selected mana value
+    let momirBusy = false;  // one summon at a time
+    let momirNum = 0;       // summons this game
+    let momirLast = null;   // last summoned card {name, image_large}
+
+    function updateMomirPanelVisibility() {
+      const inMomir = currentFormat === 'mtg_momir';
+      document.getElementById('momirPanel').classList.toggle('visible', inMomir);
+      document.getElementById('momirGame').style.display = momirActive ? '' : 'none';
+      document.getElementById('momirStartBtn').style.display = momirActive ? 'none' : '';
+      document.getElementById('momirStopBtn').style.display = momirActive ? '' : 'none';
+    }
+
+    // build the mana-value chips (0-16; Draco tops out at 16)
+    (function buildMomirChips() {
+      const wrap = document.getElementById('momirChips');
+      for (let x = 0; x <= 16; x++) {
+        const b = document.createElement('button');
+        b.className = 'momir-chip';
+        b.textContent = x;
+        b.addEventListener('click', () => {
+          momirX = x;
+          wrap.querySelectorAll('.momir-chip').forEach(c => c.classList.toggle('selected', +c.textContent === x));
+          const sb = document.getElementById('momirSummonBtn');
+          sb.disabled = false;
+          sb.innerHTML = `&#127922; Summon for X = ${x}`;
+        });
+        wrap.appendChild(b);
+      }
+    })();
+
+    function startMomirGame() {
+      momirActive = true;
+      momirX = null;
+      momirNum = 0;
+      momirLast = null;
+      document.querySelectorAll('#momirChips .momir-chip').forEach(c => c.classList.remove('selected'));
+      const sb = document.getElementById('momirSummonBtn');
+      sb.disabled = true;
+      sb.innerHTML = '&#127922; Summon';
+      document.getElementById('momirLastRow').style.display = 'none';
+      updateMomirPanelVisibility();
+      showStatus('Momir game started! Pick a mana value and summon.', 'success');
+    }
+
+    function endMomirGame(quiet) {
+      momirActive = false;
+      updateMomirPanelVisibility();
+      if (!quiet) showStatus(`Momir game ended — ${momirNum} creature${momirNum === 1 ? '' : 's'} summoned`, 'info');
+    }
+
+    function renderMomirLast(card) {
+      const f = (card.card_faces && card.card_faces[0]) || card;
+      const pt = (f.power != null && f.toughness != null) ? ` • ${f.power}/${f.toughness}` : '';
+      document.getElementById('momirThumb').src = momirLast.image_small;
+      document.getElementById('momirName').textContent = card.name;
+      document.getElementById('momirMeta').textContent = (f.type_line || card.type_line || '') + pt;
+      document.getElementById('momirCount').textContent = `Summon #${momirNum} • X = ${momirX}`;
+      document.getElementById('momirLastRow').style.display = '';
+    }
+
+    async function momirSummon() {
+      if (!momirActive || momirX === null || momirBusy) return;
+      momirBusy = true;
+      const sb = document.getElementById('momirSummonBtn');
+      sb.disabled = true;
+      sb.textContent = 'Conjuring...';
+      try {
+        const q = `t:creature cmc=${momirX} legal:vintage game:paper`;
+        const r = await fetch('https://api.scryfall.com/cards/random?q=' + encodeURIComponent(q));
+        if (!r.ok) throw new Error('no creature exists at that mana value');
+        const card = await r.json();
+        const uris = getImageUris(card);
+        momirLast = {
+          name: card.name,
+          image_small: uris?.small || '',
+          image_large: uris?.png || uris?.large || ''
+        };
+        momirNum++;
+        renderMomirLast(card);
+        if (!momirLast.image_large) throw new Error('no image for ' + card.name);
+        await sendCard(momirLast.image_large, card.name);
+      } catch (e) {
+        showStatus('Momir fizzled: ' + e.message, 'error');
+      }
+      sb.disabled = false;
+      sb.innerHTML = `&#127922; Summon for X = ${momirX}`;
+      momirBusy = false;
+    }
+
+    document.getElementById('momirStartBtn').addEventListener('click', startMomirGame);
+    document.getElementById('momirStopBtn').addEventListener('click', () => endMomirGame(false));
+    document.getElementById('momirSummonBtn').addEventListener('click', momirSummon);
+    document.getElementById('momirResendBtn').addEventListener('click', () => {
+      if (momirLast && momirLast.image_large) sendCard(momirLast.image_large, momirLast.name);
+    });
+    updateMomirPanelVisibility();
+
+    // =====================================================
+    // IMAGE ZOOM
+    // =====================================================
+
+    const zoomOverlay = document.getElementById('zoomOverlay');
+    const zoomImage = document.getElementById('zoomImage');
+
+    window.zoomCard = function(smallUrl) {
+      const largeUrl = smallUrl.replace('/small/', '/large/').replace('?format=image', '?format=image');
+      zoomImage.src = largeUrl;
+      zoomOverlay.classList.toggle('pc-rotate', currentFormat === 'mtg_planechase');
+      zoomOverlay.classList.add('open');
+    };
+
+    zoomOverlay.addEventListener('click', () => {
+      zoomOverlay.classList.remove('open', 'pc-rotate');
+      zoomImage.src = '';
     });
 
     // =====================================================
@@ -650,6 +1597,34 @@
       if (card.image_uris) return card.image_uris;
       if (card.card_faces && card.card_faces[0] && card.card_faces[0].image_uris) return card.card_faces[0].image_uris;
       return null;
+    }
+
+    // back face of a double-sided card (transform/modal DFC); null for normal cards.
+    // Split/adventure cards share one image, so card_faces[1].image_uris only exists on true DFCs.
+    function getBackImageUris(card) {
+      return (card.card_faces && card.card_faces[1] && card.card_faces[1].image_uris) || null;
+    }
+
+    // a card object representing the chosen face: face 1 = back, acts as its own card
+    // everywhere (send, dock save, favourite, deck). Distinct id so it stores separately.
+    function faceCard(card, face) {
+      if (!face) return card;
+      const bf = card.card_faces && card.card_faces[1];
+      if (!bf || !bf.image_uris) return card;
+      return { ...card,
+        id: 'b' + String(card.id || '').slice(1),
+        name: bf.name || (card.name + ' (back)'),
+        image_uris: bf.image_uris,
+        type_line: bf.type_line || card.type_line,
+        power: bf.power, toughness: bf.toughness,
+        oracle_text: bf.oracle_text,
+        card_faces: undefined };
+    }
+
+    function selectedCardWithFace(cardEl) {
+      const versions = JSON.parse(cardEl.dataset.versions);
+      const card = versions[parseInt(cardEl.dataset.selectedIndex) || 0];
+      return faceCard(card, cardEl.dataset.face === '1' ? 1 : 0);
     }
 
     function cardToStorable(card) {
@@ -694,20 +1669,84 @@
     // BLUETOOTH
     // =====================================================
 
+    const SVC_UUID  = '7a0b1000-8f5e-4c2a-9b3d-1c2e3f405060';
+    const CTRL_UUID = '7a0b1001-8f5e-4c2a-9b3d-1c2e3f405060';
+    const DATA_UUID = '7a0b1002-8f5e-4c2a-9b3d-1c2e3f405060';
+    let ctrlChar = null, dataChar = null;
+    let ackBase = 0;
+    let bleWaiters = [];
+
+    function onCtrlNotify(e) {
+      const msg = new TextDecoder().decode(e.target.value);
+      if (msg.startsWith('A:')) { ackBase = parseInt(msg.slice(2)) || ackBase; }
+      bleWaiters = bleWaiters.filter(w => {
+        if (msg.startsWith(w.prefix)) { w.resolve(msg); return false; }
+        return true;
+      });
+      if (msg.startsWith('D:')) {
+        if (msg !== 'D:END') {
+          const parts = msg.slice(2).split('|');
+          dockDecks.push({ name: parts[0] || '?', count: parseInt(parts[1]) || 0 });
+        }
+      }
+      if (msg.startsWith('L:')) {
+        if (msg === 'L:END') renderDockList();
+        else {
+          const parts = msg.slice(2).split('|');
+          dockCards.push({ id: parts[0] || '', name: parts[1] || '?', pt: parts[2] || '',
+                           type: parts[3] || '', sid: parts[4] || '', fav: parts[5] === '1' });
+        }
+      }
+      if (msg.startsWith('W:')) {
+        if (msg === 'W:END') renderWifiScan(true);
+        else {
+          const parts = msg.slice(2).split('|');
+          wifiScanResults.push({ rssi: parseInt(parts[0]) || -99, enc: parts[1] === '1', ssid: parts.slice(2).join('|') });
+          renderWifiScan(false);
+        }
+      }
+      if (msg.startsWith('WIFI:')) {
+        const w = msg.slice(5);
+        if (w.startsWith('OK')) {
+          try { localStorage.setItem('tc_dock_ip', w.slice(3).trim()); } catch (e) {}
+        }
+        showStatus(w.startsWith('OK') ? 'Dock is on WiFi (' + w.slice(3) + ')' : 'Dock WiFi failed - check details', w.startsWith('OK') ? 'success' : 'error');
+      }
+      if (msg.startsWith('ERR')) showStatus('Dock error: ' + msg, 'error');
+    }
+
+    function bleWaitFor(prefix, timeoutMs) {
+      return new Promise((resolve, reject) => {
+        const w = { prefix, resolve };
+        bleWaiters.push(w);
+        setTimeout(() => { bleWaiters = bleWaiters.filter(x => x !== w); reject(new Error('Timeout: ' + prefix)); }, timeoutMs);
+      });
+    }
+
     btBtn.addEventListener('click', async () => {
       try {
         showStatus('Connecting...', 'info');
         const device = await navigator.bluetooth.requestDevice({
-          filters: [{ name: 'MTG_EPaper' }],
-          optionalServices: ['0000ffe0-0000-1000-8000-00805f9b34fb']
+          filters: [{ namePrefix: 'TokenConjurer' }],
+          optionalServices: [SVC_UUID]
+        });
+        device.addEventListener('gattserverdisconnected', () => {
+          ctrlChar = null; dataChar = null; btCharacteristic = null;
+          btBtn.textContent = 'Connect BT';
+          btBtn.classList.remove('connected');
+          showStatus('Dock disconnected', 'error');
         });
         const server = await device.gatt.connect();
-        const service = await server.getPrimaryService('0000ffe0-0000-1000-8000-00805f9b34fb');
-        btCharacteristic = await service.getCharacteristic('0000ffe1-0000-1000-8000-00805f9b34fb');
+        const service = await server.getPrimaryService(SVC_UUID);
+        ctrlChar = await service.getCharacteristic(CTRL_UUID);
+        dataChar = await service.getCharacteristic(DATA_UUID);
+        await ctrlChar.startNotifications();
+        ctrlChar.addEventListener('characteristicvaluechanged', onCtrlNotify);
+        btCharacteristic = dataChar; // legacy truthiness checks elsewhere
         btDevice = device;
         btBtn.textContent = 'Connected';
         btBtn.classList.add('connected');
-        showStatus('Connected to Token Conjurer!', 'success');
+        showStatus('Connected to ' + device.name + '!', 'success');
       } catch (error) {
         showStatus('Connection failed: ' + error.message, 'error');
       }
@@ -718,17 +1757,56 @@
     // =====================================================
     searchBtn.addEventListener('click', () => searchCards(false));
     tokenBtn.addEventListener('click', () => searchCards(true));
+    listAllBtn.addEventListener('click', () => listAllPlanechase());
     searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') searchCards(false); });
+
+    async function listAllPlanechase() {
+      searchBtn.disabled = true;
+      listAllBtn.disabled = true;
+      resultsEl.innerHTML = '<div class="loading"><div class="spinner"></div><div>Loading all Planechase cards...</div></div>';
+
+      try {
+        const fmt = FORMATS[currentFormat];
+        const q = fmt.searchFilter || '(type:plane OR type:phenomenon)';
+        let allCards = [];
+        let url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(q)}&unique=prints&order=name`;
+
+        while (url) {
+          const resp = await fetch(url);
+          const data = await resp.json();
+          if (data.data) allCards = allCards.concat(data.data);
+          url = data.has_more ? data.next_page : null;
+          if (url) await new Promise(r => setTimeout(r, 100)); // rate limit courtesy
+        }
+
+        if (allCards.length > 0) {
+          const grouped = {};
+          allCards.forEach(card => { if (!grouped[card.name]) grouped[card.name] = []; grouped[card.name].push(card); });
+          displayGroupedCards(grouped);
+        } else {
+          resultsEl.innerHTML = '<div class="loading">No cards found</div>';
+        }
+      } catch (error) {
+        resultsEl.innerHTML = `<div class="loading">Error: ${error.message}</div>`;
+      } finally {
+        searchBtn.disabled = false;
+        listAllBtn.disabled = false;
+      }
+    }
 
     async function searchCards(isToken = false) {
       const query = searchInput.value.trim();
       if (!query) return;
       searchBtn.disabled = true;
       tokenBtn.disabled = true;
+      listAllBtn.disabled = true;
       resultsEl.innerHTML = '<div class="loading"><div class="spinner"></div><div>Searching Scryfall...</div></div>';
 
       try {
-        const sq = isToken ? `${query} is:token` : query;
+        const fmt = FORMATS[currentFormat];
+        let sq = query;
+        if (isToken) sq = `${query} is:token`;
+        if (fmt.searchFilter) sq = `${sq} ${fmt.searchFilter}`;
         const resp = await fetch(`https://api.scryfall.com/cards/search?q=${encodeURIComponent(sq)}&unique=prints&order=released`);
         const data = await resp.json();
         if (data.data && data.data.length > 0) {
@@ -743,6 +1821,7 @@
       } finally {
         searchBtn.disabled = false;
         tokenBtn.disabled = false;
+        listAllBtn.disabled = false;
       }
     }
 
@@ -761,15 +1840,17 @@
         cardEl.className = 'card-item';
         cardEl.innerHTML = `
           <div class="card-main">
-            <img class="card-thumb" src="${uris?.small || ''}" alt="${cardName}" id="thumb-${safe}">
+            <img class="card-thumb" src="${uris?.small || ''}" alt="${cardName}" id="thumb-${safe}" onclick="zoomCard(this.src)">
             <div class="card-info">
               <div class="card-name">${cardName}${isPreferred ? '<span class="preferred-badge">Preferred</span>' : ''}</div>
               <div class="card-set" id="set-${safe}">${selectedVersion.set_name} (${selectedVersion.set.toUpperCase()})</div>
               ${versions.length > 1 ? `<div class="version-toggle" onclick="toggleVersions('${escaped}')">Choose version (${versions.length})</div>` : ''}
+              ${getBackImageUris(selectedVersion) ? `<div class="version-toggle" id="face-${safe}" onclick="toggleFace('${escaped}')">Showing: Front &#8644;</div>` : ''}
             </div>
           </div>
           <div class="card-actions">
             <button class="send-btn" onclick="sendSelectedCard('${escaped}')">Send to E-Paper</button>
+            <button class="deck-add-btn" onclick="saveSelectedToDock('${escaped}')" title="Save to dock">Dock+</button>
             <button class="fav-btn ${fav ? 'favourited' : ''}" id="fav-${safe}" onclick="toggleFavFromSearch('${escaped}')">&#9733;</button>
             <button class="deck-add-btn" onclick="addToDeckFromSearch('${escaped}')" title="Add to deck">+D</button>
           </div>
@@ -783,6 +1864,7 @@
         `;
         resultsEl.appendChild(cardEl);
         cardEl.dataset.versions = JSON.stringify(versions);
+        cardEl.dataset.face = '0';
         cardEl.dataset.selectedIndex = versions.findIndex(v => v.id === selectedVersion.id).toString();
       });
     }
@@ -799,7 +1881,12 @@
       const versions = JSON.parse(cardEl.dataset.versions);
       const selected = versions[idx];
       cardEl.dataset.selectedIndex = idx;
-      const uris = getImageUris(selected);
+      // face choice sticks across printings of this card (reset only if the new printing has no back)
+      if (cardEl.dataset.face === '1' && !getBackImageUris(selected)) cardEl.dataset.face = '0';
+      const face = cardEl.dataset.face === '1' ? 1 : 0;
+      const faceLbl = document.getElementById(`face-${safe}`);
+      if (faceLbl) faceLbl.innerHTML = 'Showing: ' + (face ? 'Back' : 'Front') + ' &#8644;';
+      const uris = getImageUris(faceCard(selected, face));
       document.getElementById(`thumb-${safe}`).src = uris?.small || '';
       document.getElementById(`set-${safe}`).textContent = `${selected.set_name} (${selected.set.toUpperCase()})`;
       const nameEl = cardEl.querySelector('.card-name');
@@ -808,39 +1895,65 @@
       const favBtn = document.getElementById(`fav-${safe}`);
       if (favBtn) favBtn.classList.toggle('favourited', isFavourited(selected.id));
       cardPreferences[cardName] = selected.set;
-      try { localStorage.setItem('mtg_card_preferences', JSON.stringify(cardPreferences)); } catch (e) {}
+      try { localStorage.setItem(storageKey('card_preferences'), JSON.stringify(cardPreferences)); } catch (e) {}
+    };
+
+    window.toggleFace = function(cardName) {
+      const safe = cardName.replace(/[^a-z0-9]/gi, '');
+      const cardEl = Array.from(resultsEl.children).find(el => el.querySelector(`#thumb-${safe}`));
+      if (!cardEl) return;
+      const face = cardEl.dataset.face === '1' ? 0 : 1;
+      cardEl.dataset.face = String(face);
+      const card = selectedCardWithFace(cardEl);
+      const uris = getImageUris(card);
+      const thumb = document.getElementById(`thumb-${safe}`);
+      if (thumb && uris) thumb.src = uris.small || thumb.src;
+      const lbl = document.getElementById(`face-${safe}`);
+      if (lbl) lbl.innerHTML = 'Showing: ' + (face ? 'Back' : 'Front') + ' &#8644;';
     };
 
     window.toggleFavFromSearch = function(cardName) {
       const safe = cardName.replace(/[^a-z0-9]/gi, '');
       const cardEl = Array.from(resultsEl.children).find(el => el.querySelector(`#thumb-${safe}`));
       if (!cardEl) return;
-      const versions = JSON.parse(cardEl.dataset.versions);
-      const card = versions[parseInt(cardEl.dataset.selectedIndex)];
+      const card = selectedCardWithFace(cardEl);
       toggleFavourite(card);
       const favBtn = document.getElementById(`fav-${safe}`);
       if (favBtn) favBtn.classList.toggle('favourited', isFavourited(card.id));
     };
 
     window.sendSelectedCard = async function(cardName) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
       const safe = cardName.replace(/[^a-z0-9]/gi, '');
       const cardEl = Array.from(resultsEl.children).find(el => el.querySelector(`#thumb-${safe}`));
       if (!cardEl) return;
-      const versions = JSON.parse(cardEl.dataset.versions);
-      const card = versions[parseInt(cardEl.dataset.selectedIndex)];
+      const card = selectedCardWithFace(cardEl);
       const uris = getImageUris(card);
       if (!uris) { showStatus('No image available', 'error'); return; }
       addToRecent(card);
       await sendCard(uris.png || uris.large, card.name);
     };
+    window.saveSelectedToDock = async function(cardName) {
+      const safe = cardName.replace(/[^a-z0-9]/gi, '');
+      const cardEl = Array.from(resultsEl.children).find(el => el.querySelector(`#thumb-${safe}`));
+      if (!cardEl) return;
+      const card = selectedCardWithFace(cardEl);
+      const uris = getImageUris(card);
+      if (!uris) { showStatus('No image available', 'error'); return; }
+      await saveCardToDock(card, uris.png || uris.large);
+    };
+
+    window.saveStoredToDock = async function(idx, kind) {
+      const card = kind === 'fav' ? favourites[idx] : recent[idx];
+      if (!card || !card.image_large) { showStatus('No image available', 'error'); return; }
+      await saveCardToDock(card, card.image_large);
+    };
+
 
     window.addToDeckFromSearch = function(cardName) {
       const safe = cardName.replace(/[^a-z0-9]/gi, '');
       const cardEl = Array.from(resultsEl.children).find(el => el.querySelector(`#thumb-${safe}`));
       if (!cardEl) return;
-      const versions = JSON.parse(cardEl.dataset.versions);
-      const card = versions[parseInt(cardEl.dataset.selectedIndex)];
+      const card = selectedCardWithFace(cardEl);
       openDeckPicker(card);
     };
 
@@ -902,12 +2015,13 @@
 
     function renderDecks() {
       const el = document.getElementById('decksList');
+      const isPlanechase = currentFormat === 'mtg_planechase';
+
       if (decks.length === 0) {
         el.innerHTML = `
           <button class="new-deck-btn" onclick="createNewDeck()">+ Create New Deck</button>
           <div class="empty-state">
-            <div class="empty-state-icon">&#127183;</div>
-            <div class="empty-state-text">No decks yet.<br>Create a deck and add cards from Search.</div>
+            <div class="empty-state-text">${isPlanechase ? 'No Planechase decks yet.<br>Create a deck and search for planes.' : 'No decks yet.<br>Create a deck and add cards from Search.'}</div>
           </div>`;
         return;
       }
@@ -919,41 +2033,63 @@
         div.className = 'deck-item';
         div.id = `deck-${di}`;
 
+        const isPlaying = isPlanechase && pcGameActive && pcSourceDeckIdx === di;
+
         let cardsHTML = '';
-        deck.cards.forEach((card, ci) => {
-          cardsHTML += `
-            <div class="deck-card-row">
-              <img class="deck-card-thumb" src="${card.image_small}" alt="${card.name}">
-              <div class="deck-card-info">
-                <div class="deck-card-name">${card.name}</div>
-                <div class="deck-card-set">${card.set_name} (${card.set.toUpperCase()})</div>
-              </div>
-              <div class="deck-card-actions">
-                <button class="deck-card-send" onclick="sendDeckCard(${di},${ci})">Send</button>
-                <button class="deck-card-remove" onclick="removeDeckCard(${di},${ci})">&#10005;</button>
-              </div>
-            </div>`;
-        });
+        if (!isPlaying) {
+          deck.cards.forEach((card, ci) => {
+            cardsHTML += `
+              <div class="deck-card-row">
+                <img class="deck-card-thumb" src="${card.image_small}" alt="${card.name}" onclick="zoomCard(this.src)">
+                <div class="deck-card-info">
+                  <div class="deck-card-name">${card.name}</div>
+                  <div class="deck-card-set">${card.set_name} (${card.set.toUpperCase()})</div>
+                </div>
+                <div class="deck-card-actions">
+                  <button class="deck-card-send" onclick="sendDeckCard(${di},${ci})">Send</button>
+                  <button class="deck-card-remove" onclick="removeDeckCard(${di},${ci})">&#10005;</button>
+                </div>
+              </div>`;
+          });
+        }
+
+        const playBtnHTML = isPlanechase && deck.cards.length > 0
+          ? `<button class="deck-play-btn" onclick="event.stopPropagation();startPCGame(${di})" ${isPlaying ? 'disabled style="opacity:0.5"' : ''}>${isPlaying ? '&#9654; Playing...' : '<span class="pw-icon"></span> Play'}</button>`
+          : '';
+
+        const deckCardsInner = isPlaying
+          ? `<div style="padding:14px 0;color:#888;text-align:center;font-size:13px;">Deck is in play — contents hidden</div>
+             <div class="deck-actions">
+               <button class="deck-rename-btn" onclick="renameDeck(${di})">Rename</button>
+               <button class="deck-delete-btn" onclick="deleteDeck(${di})">Delete Deck</button>
+             </div>`
+          : `${cardsHTML || `<div style="padding:12px 0;color:#555;text-align:center;">No ${isPlanechase ? 'planes' : 'cards'} yet — add from Search tab</div>`}
+             <div class="deck-actions">
+               <button class="deck-rename-btn" onclick="renameDeck(${di})">Rename</button>
+               <button class="deck-delete-btn" onclick="deleteDeck(${di})">Delete Deck</button>
+             </div>`;
 
         div.innerHTML = `
           <div class="deck-header" onclick="toggleDeck(${di})">
             <div class="deck-header-info">
-              <div class="deck-header-name">${deck.name}</div>
-              <div class="deck-header-count">${deck.cards.length} card${deck.cards.length !== 1 ? 's' : ''}</div>
+              <div class="deck-header-name">${deck.name}${isPlaying ? ' <span style="color:#ec4899;font-size:12px;">● ACTIVE</span>' : ''}</div>
+              <div class="deck-header-count">${deck.cards.length} ${isPlanechase ? 'plane' : 'card'}${deck.cards.length !== 1 ? 's' : ''}</div>
             </div>
+            ${playBtnHTML}
             <div class="deck-header-arrow">&#9654;</div>
           </div>
           <div class="deck-cards">
-            ${cardsHTML || '<div style="padding:12px 0;color:#555;text-align:center;">No cards yet — add from Search tab</div>'}
-            <div class="deck-actions">
-              <button class="deck-rename-btn" onclick="renameDeck(${di})">Rename</button>
-              <button class="deck-delete-btn" onclick="deleteDeck(${di})">Delete Deck</button>
-            </div>
+            ${deckCardsInner}
           </div>`;
 
         el.appendChild(div);
       });
     }
+
+    window.startPCGame = function(di) {
+      startPlanechaseGame(di);
+      renderDecks();
+    };
 
     window.createNewDeck = function() {
       const name = prompt('Deck name:');
@@ -969,7 +2105,6 @@
     };
 
     window.sendDeckCard = async function(di, ci) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
       const card = decks[di]?.cards[ci];
       if (!card || !card.image_large) { showStatus('No image available', 'error'); return; }
       const fakeCard = { id: card.id, name: card.name, set: card.set, set_name: card.set_name, image_uris: { small: card.image_small, png: card.image_large, large: card.image_large } };
@@ -997,6 +2132,8 @@
 
     window.deleteDeck = function(di) {
       if (!confirm(`Delete "${decks[di].name}" and all its cards?`)) return;
+      if (pcGameActive && pcSourceDeckIdx === di) endPlanechaseGame();
+      if (pcSourceDeckIdx !== null && pcSourceDeckIdx > di) pcSourceDeckIdx--;
       decks.splice(di, 1);
       saveDecks();
       renderDecks();
@@ -1009,7 +2146,7 @@
     function renderFavourites() {
       const el = document.getElementById('favouritesList');
       if (favourites.length === 0) {
-        el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#9733;</div><div class="empty-state-text">No favourites yet.<br>Tap the star on any card to save it here.</div></div>';
+        el.innerHTML = '<div class="empty-state"><div class="empty-state-text">No favourites yet.<br>Tap the star on any card to save it here.</div></div>';
         return;
       }
       el.innerHTML = '';
@@ -1018,7 +2155,7 @@
         div.className = 'card-item';
         div.innerHTML = `
           <div class="card-main">
-            <img class="card-thumb" src="${card.image_small}" alt="${card.name}">
+            <img class="card-thumb" src="${card.image_small}" alt="${card.name}" onclick="zoomCard(this.src)">
             <div class="card-info">
               <div class="card-name">${card.name}</div>
               <div class="card-set">${card.set_name} (${card.set.toUpperCase()})</div>
@@ -1026,6 +2163,7 @@
           </div>
           <div class="card-actions">
             <button class="send-btn" onclick="sendStoredCard(${idx}, 'fav')">Send to E-Paper</button>
+            <button class="deck-add-btn" onclick="saveStoredToDock(${idx}, 'fav')" title="Save to dock">Dock+</button>
             <button class="fav-btn favourited" onclick="removeFavourite(${idx})">&#9733;</button>
             <button class="deck-add-btn" onclick="addToDeckFromStored(${idx}, 'fav')" title="Add to deck">+D</button>
           </div>`;
@@ -1058,7 +2196,7 @@
     function renderRecent() {
       const el = document.getElementById('recentList');
       if (recentCards.length === 0) {
-        el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#128344;</div><div class="empty-state-text">No cards sent yet.<br>Send a card and it\'ll appear here.</div></div>';
+        el.innerHTML = '<div class="empty-state"><div class="empty-state-text">No cards sent yet.<br>Send a card and it\'ll appear here.</div></div>';
         return;
       }
       el.innerHTML = '';
@@ -1068,7 +2206,7 @@
         div.className = 'card-item';
         div.innerHTML = `
           <div class="card-main">
-            <img class="card-thumb" src="${card.image_small}" alt="${card.name}">
+            <img class="card-thumb" src="${card.image_small}" alt="${card.name}" onclick="zoomCard(this.src)">
             <div class="card-info">
               <div class="card-name">${card.name}</div>
               <div class="card-set">${card.set_name} (${card.set.toUpperCase()})</div>
@@ -1102,7 +2240,6 @@
     };
 
     window.sendStoredCard = async function(idx, source) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
       const list = source === 'fav' ? favourites : recentCards;
       const card = list[idx];
       if (!card || !card.image_large) { showStatus('No image available', 'error'); return; }
@@ -1112,163 +2249,633 @@
     };
 
     // =====================================================
-    // IMAGE PROCESSING
+    // IMAGE PROCESSING - 4-grey 480x800 pipeline
     // =====================================================
 
-    function convertToGrayscale(imageData) {
-      const d = imageData.data;
-      const out = new Float32Array(imageData.width * imageData.height);
-      for (let i = 0; i < d.length; i += 4) { out[i / 4] = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]; }
-      return out;
-    }
-
-    function autoLevels(px) {
-      const hist = new Uint32Array(256);
-      for (let i = 0; i < px.length; i++) { hist[Math.min(255, Math.max(0, Math.round(px[i])))]++; }
-      const total = px.length;
-      let lo = 0, hi = 255, cum = 0;
-      for (let i = 0; i < 256; i++) { cum += hist[i]; if (cum >= total * 0.005) { lo = i; break; } }
-      cum = 0;
-      for (let i = 255; i >= 0; i--) { cum += hist[i]; if (cum >= total * 0.005) { hi = i; break; } }
-      if (hi <= lo) return px;
-      const scale = 255 / (hi - lo);
-      for (let i = 0; i < px.length; i++) { px[i] = Math.max(0, Math.min(255, (px[i] - lo) * scale)); }
-      return px;
-    }
-
-    function sCurveContrast(px, strength) {
-      if (Math.abs(strength - 1.0) < 0.01) return px;
-      const k = strength * 5;
-      const s0 = 1 / (1 + Math.exp(-k * -0.5));
-      const s1 = 1 / (1 + Math.exp(-k * 0.5));
-      const range = s1 - s0;
-      for (let i = 0; i < px.length; i++) { const x = px[i] / 255; const s = 1 / (1 + Math.exp(-k * (x - 0.5))); px[i] = ((s - s0) / range) * 255; }
-      return px;
-    }
-
-    function unsharpMask(px, w, h, amount) {
-      if (amount <= 0) return px;
-      const tmp = new Float32Array(px.length);
-      const blurred = new Float32Array(px.length);
-      for (let y = 0; y < h; y++) { for (let x = 0; x < w; x++) { let sum = 0, n = 0; for (let dx = -1; dx <= 1; dx++) { const nx = x + dx; if (nx >= 0 && nx < w) { sum += px[y * w + nx]; n++; } } tmp[y * w + x] = sum / n; } }
-      for (let y = 0; y < h; y++) { for (let x = 0; x < w; x++) { let sum = 0, n = 0; for (let dy = -1; dy <= 1; dy++) { const ny = y + dy; if (ny >= 0 && ny < h) { sum += tmp[ny * w + x]; n++; } } blurred[y * w + x] = sum / n; } }
-      for (let i = 0; i < px.length; i++) { px[i] = Math.max(0, Math.min(255, px[i] + amount * (px[i] - blurred[i]))); }
-      return px;
-    }
-
-    function atkinsonDither1Bit(px, w, h) {
-      const out = new Float32Array(px);
-      for (let y = 0; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          const i = y * w + x;
-          const old = Math.max(0, Math.min(255, out[i]));
-          const q = old < 128 ? 0 : 255;
-          out[i] = q;
-          const e = (old - q) / 8;
-          if (x + 1 < w) out[i + 1] += e;
-          if (x + 2 < w) out[i + 2] += e;
-          if (y + 1 < h && x - 1 >= 0) out[i + w - 1] += e;
-          if (y + 1 < h) out[i + w] += e;
-          if (y + 1 < h && x + 1 < w) out[i + w + 1] += e;
-          if (y + 2 < h) out[i + 2 * w] += e;
+    function buildRowMap(srcH) {
+      const zones = [
+        {a:0.000, b:0.055, w:0.55}, {a:0.055, b:0.110, w:1.00},
+        {a:0.110, b:0.575, w:1.00}, {a:0.575, b:0.635, w:1.00},
+        {a:0.635, b:0.930, w:0.80}, {a:0.930, b:1.000, w:0.35},
+      ];
+      let weighted = 0;
+      zones.forEach(z => weighted += (z.b - z.a) * srcH * z.w);
+      const k = EPD_H / weighted;
+      const map = new Float32Array(EPD_H);
+      let outRow = 0;
+      for (const z of zones) {
+        const srcSpan = (z.b - z.a) * srcH;
+        const dstRows = Math.round(srcSpan * z.w * k);
+        for (let r = 0; r < dstRows && outRow < EPD_H; r++, outRow++) {
+          map[outRow] = z.a * srcH + (r / dstRows) * srcSpan;
         }
       }
-      return out;
+      while (outRow < EPD_H) { map[outRow] = srcH - 1; outRow++; }
+      return map;
     }
 
-    function processImage(imageData, w, h) {
-      let px = convertToGrayscale(imageData);
-      px = autoLevels(px);
-      px = sCurveContrast(px, 1.3);
-      px = unsharpMask(px, w, h, 0.8);
-      px = atkinsonDither1Bit(px, w, h);
-      return px;
+    // Returns a portrait-oriented source canvas; landscape cards (planes!) rotate 90deg
+    function portraitSource(img) {
+      if (img.width <= img.height) return img;
+      const c = document.createElement('canvas');
+      c.width = img.height; c.height = img.width;
+      const x = c.getContext('2d');
+      x.translate(c.width / 2, c.height / 2);
+      x.rotate(Math.PI / 2);
+      x.drawImage(img, -img.width / 2, -img.height / 2);
+      return c;
     }
 
-    // v3: 1-bit packing — 8 pixels per byte, MSB first, linear order
-    // bit 1 = black, bit 0 = white
-    // 300*400 = 120000 pixels / 8 = 15000 bytes exactly
-    function packTo1Bit(px) {
-      const totalPixels = px.length; // should be 120000
-      const out = new Uint8Array(Math.ceil(totalPixels / 8));
-      for (let i = 0; i < totalPixels; i++) {
-        if (Math.round(px[i]) < 128) {
-          // dark pixel = bit 1 (black)
-          out[i >> 3] |= (1 << (7 - (i & 7)));
-        }
-        // light pixel = bit 0 (white), already 0 by default
+    function preCropCard(source) {
+      const st = dispSettings.strim / 100, bt = dispSettings.btrim / 100, tt = dispSettings.ttrim / 100;
+      const sw = source.width * (1 - 2 * st), sh = source.height * (1 - tt - bt);
+      const c = document.createElement('canvas');
+      c.width = Math.max(1, Math.round(sw));
+      c.height = Math.max(1, Math.round(sh));
+      const x = c.getContext('2d');
+      x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
+      x.drawImage(source, source.width * st, source.height * tt, sw, sh, 0, 0, c.width, c.height);
+      return c;
+    }
+
+    function composeFrame(card, mode) {
+      const c = document.createElement('canvas'); c.width = EPD_W; c.height = EPD_H;
+      const x = c.getContext('2d');
+      x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
+      const cardH = Math.round(card.height * (EPD_W / card.width));
+      const y0 = Math.round((EPD_H - cardH) / 2);
+
+      if (mode === 'fullbleed') {
+        const scale = Math.max(EPD_W / card.width, EPD_H / card.height);
+        x.drawImage(card, (EPD_W - card.width * scale) / 2, 0, card.width * scale, card.height * scale);
+      } else if (mode === 'fill-blur') {
+        const cover = Math.max(EPD_W / card.width, EPD_H / card.height) * 1.1;
+        x.filter = 'blur(18px) brightness(0.8)';
+        x.drawImage(card, (EPD_W - card.width * cover) / 2, (EPD_H - card.height * cover) / 2, card.width * cover, card.height * cover);
+        x.filter = 'none';
+        if (cardH <= EPD_H) x.drawImage(card, 0, y0, EPD_W, cardH);
+        else { const s2 = EPD_H / card.height, w2 = card.width * s2; x.drawImage(card, (EPD_W - w2) / 2, 0, w2, EPD_H); }
+      } else if (mode === 'fill-mirror') {
+        if (cardH <= EPD_H) {
+          x.drawImage(card, 0, y0, EPD_W, cardH);
+          if (y0 > 0) {
+            x.save(); x.translate(0, y0); x.scale(1, -1);
+            x.drawImage(card, 0, 0, card.width, card.height * (y0 / cardH), 0, 0, EPD_W, y0);
+            x.restore();
+            x.save(); x.translate(0, y0 + cardH); x.scale(1, -1);
+            const srcStrip = card.height * (y0 / cardH);
+            x.drawImage(card, 0, card.height - srcStrip, card.width, srcStrip, 0, -(EPD_H - (y0 + cardH)), EPD_W, EPD_H - (y0 + cardH));
+            x.restore();
+          }
+        } else { const s2 = EPD_H / card.height, w2 = card.width * s2; x.fillStyle = '#fff'; x.fillRect(0, 0, EPD_W, EPD_H); x.drawImage(card, (EPD_W - w2) / 2, 0, w2, EPD_H); }
+      } else if (mode === 'fill-black' || mode === 'fill-white') {
+        x.fillStyle = mode === 'fill-black' ? '#000' : '#fff';
+        x.fillRect(0, 0, EPD_W, EPD_H);
+        if (cardH <= EPD_H) x.drawImage(card, 0, y0, EPD_W, cardH);
+        else { const s2 = EPD_H / card.height, w2 = card.width * s2; x.drawImage(card, (EPD_W - w2) / 2, 0, w2, EPD_H); }
+      } else { // smart / plain stretch handled via row map below using this true-aspect draw
+        return null;
       }
-      return out;
+      return x.getImageData(0, 0, EPD_W, EPD_H);
+    }
+
+    function processImageNew(imgLike) {
+      const card = preCropCard(imgLike);
+      const mode = dispSettings.mode;
+      const gamma = dispSettings.gamma, bright = dispSettings.bright, contrast = dispSettings.contrast;
+      const cf = (259 * (contrast + 255)) / (255 * (259 - contrast));
+      const tone = v => {
+        let t = 255 * Math.pow(v / 255, gamma);
+        t = cf * (t - 128) + 128 + bright;
+        return Math.max(0, Math.min(255, t));
+      };
+
+      const grey = new Float32Array(EPD_W * EPD_H);
+      const composed = composeFrame(card, mode);
+      if (composed) {
+        for (let i = 0; i < EPD_W * EPD_H; i++) {
+          grey[i] = tone(0.299 * composed.data[i*4] + 0.587 * composed.data[i*4+1] + 0.114 * composed.data[i*4+2]);
+        }
+      } else {
+        const trueH = Math.round(card.height * (EPD_W / card.width));
+        const work = document.createElement('canvas'); work.width = EPD_W; work.height = trueH;
+        const wx = work.getContext('2d');
+        wx.imageSmoothingEnabled = true; wx.imageSmoothingQuality = 'high';
+        wx.drawImage(card, 0, 0, EPD_W, trueH);
+        const sd = wx.getImageData(0, 0, EPD_W, trueH);
+        const map = (mode === 'smart' && trueH > EPD_H) ? buildRowMap(trueH) : null;
+        for (let y = 0; y < EPD_H; y++) {
+          const sy = map ? Math.min(trueH - 1, Math.floor(map[y]))
+                         : Math.min(trueH - 1, Math.floor(y * trueH / EPD_H));
+          for (let xx = 0; xx < EPD_W; xx++) {
+            const si = (sy * EPD_W + xx) * 4;
+            grey[y * EPD_W + xx] = tone(0.299 * sd.data[si] + 0.587 * sd.data[si+1] + 0.114 * sd.data[si+2]);
+          }
+        }
+      }
+
+      // panel B: render DIRECT from the source card scan at native 300x400.
+      // Card aspect (~0.72) nearly matches this panel (0.75): cover-fit, ~2% crop only.
+      // Uses the border-trimmed card, skips the tall-panel compose modes entirely.
+      const dstC = document.createElement('canvas'); dstC.width = EPDB_W; dstC.height = EPDB_H;
+      const dctx = dstC.getContext('2d');
+      dctx.fillStyle = '#fff'; dctx.fillRect(0, 0, EPDB_W, EPDB_H);
+      dctx.imageSmoothingEnabled = true; dctx.imageSmoothingQuality = 'high';
+      const bs = Math.max(EPDB_W / card.width, EPDB_H / card.height);
+      dctx.drawImage(card, (EPDB_W - card.width * bs) / 2, (EPDB_H - card.height * bs) / 2,
+                     card.width * bs, card.height * bs);
+      const did = dctx.getImageData(0, 0, EPDB_W, EPDB_H);
+      const greyB = new Float32Array(EPDB_W * EPDB_H);
+      for (let i = 0; i < EPDB_W * EPDB_H; i++) {
+        greyB[i] = tone(0.299 * did.data[i*4] + 0.587 * did.data[i*4+1] + 0.114 * did.data[i*4+2]);
+      }
+      { // gentle unsharp: greyB + 0.35*(greyB - 3x3 blur)
+        const blur = new Float32Array(EPDB_W * EPDB_H);
+        for (let y = 0; y < EPDB_H; y++) {
+          for (let xx = 0; xx < EPDB_W; xx++) {
+            let acc = 0, n = 0;
+            for (let dy = -1; dy <= 1; dy++) {
+              const yy = y + dy; if (yy < 0 || yy >= EPDB_H) continue;
+              for (let dx = -1; dx <= 1; dx++) {
+                const xb = xx + dx; if (xb < 0 || xb >= EPDB_W) continue;
+                acc += greyB[yy * EPDB_W + xb]; n++;
+              }
+            }
+            blur[y * EPDB_W + xx] = acc / n;
+          }
+        }
+        for (let i = 0; i < EPDB_W * EPDB_H; i++) {
+          greyB[i] = Math.max(0, Math.min(255, greyB[i] + (greyB[i] - blur[i]) * 0.35));
+        }
+      }
+
+      // Floyd-Steinberg to 4 levels
+      const useFS = dispSettings.dither === 'fs';
+      const lvl = v => Math.round(Math.max(0, Math.min(255, v)) / 85) * 85;
+      const out = new Uint8Array(EPD_W * EPD_H);
+      for (let y = 0; y < EPD_H; y++) {
+        for (let xx = 0; xx < EPD_W; xx++) {
+          const i = y * EPD_W + xx;
+          const old = grey[i];
+          const nv = lvl(old);
+          out[i] = nv;
+          if (useFS) {
+            const err = old - nv;
+            if (xx + 1 < EPD_W)               grey[i + 1]          += err * 7 / 16;
+            if (y + 1 < EPD_H) {
+              if (xx > 0)                     grey[i + EPD_W - 1]  += err * 3 / 16;
+                                              grey[i + EPD_W]      += err * 5 / 16;
+              if (xx + 1 < EPD_W)             grey[i + EPD_W + 1]  += err * 1 / 16;
+            }
+          }
+        }
+      }
+      // pack 2 bits/px, 4 px/byte, MSB first (0=black..3=white)
+      const packed = new Uint8Array(IMAGE_PACKED_SIZE);
+      for (let i = 0; i < EPD_W * EPD_H; i++) {
+        packed[i >> 2] |= (out[i] / 85) << (6 - (i & 3) * 2);
+      }
+
+      // panel B: dither natively at 300x400 (same FS kernel), then pack
+      const outB = new Uint8Array(EPDB_W * EPDB_H);
+      for (let y = 0; y < EPDB_H; y++) {
+        for (let xx = 0; xx < EPDB_W; xx++) {
+          const i = y * EPDB_W + xx;
+          const old = greyB[i];
+          const nv = lvl(old);
+          outB[i] = nv;
+          if (useFS) {
+            const err = old - nv;
+            if (xx + 1 < EPDB_W)               greyB[i + 1]           += err * 7 / 16;
+            if (y + 1 < EPDB_H) {
+              if (xx > 0)                      greyB[i + EPDB_W - 1]  += err * 3 / 16;
+                                               greyB[i + EPDB_W]      += err * 5 / 16;
+              if (xx + 1 < EPDB_W)             greyB[i + EPDB_W + 1]  += err * 1 / 16;
+            }
+          }
+        }
+      }
+      const packedB = new Uint8Array(IMAGE_B_PACKED_SIZE);
+      for (let i = 0; i < EPDB_W * EPDB_H; i++) {
+        packedB[i >> 2] |= (outB[i] / 85) << (6 - (i & 3) * 2);
+      }
+      packed.packedB = packedB;   // rides along with the main render
+      return packed;
     }
 
     // =====================================================
-    // BLE TRANSFER
+    // BLE TRANSFER - flow-controlled protocol (BUILD G dock)
     // =====================================================
 
-    const BLE_CHUNK_SIZE = 509;
-    const BURST_SIZE = 5; // packets without response before a sync
+    let ctrlQueue = Promise.resolve();
+    function writeCtrl(s) {
+      // serialize all GATT writes - Web Bluetooth allows only one operation in flight
+      const job = ctrlQueue.then(() => ctrlChar.writeValue(new TextEncoder().encode(s)));
+      ctrlQueue = job.catch(() => {});
+      return job;
+    }
 
-    async function sendBLE(packed, cardName) {
-      await btCharacteristic.writeValueWithResponse(new Uint8Array([0xAA]));
-      await sleep(50);
+    // ---- WiFi network scan picker ----
+    let wifiScanResults = [];
+    let wifiScanTimer = null;
 
-      let sent = 0;
-      let packetNum = 0;
-      const t0 = Date.now();
-      const totalPackets = Math.ceil(packed.length / BLE_CHUNK_SIZE);
+    function wifiBars(rssi) {
+      if (rssi >= -55) return '\u2582\u2584\u2586\u2588';
+      if (rssi >= -67) return '\u2582\u2584\u2586';
+      if (rssi >= -75) return '\u2582\u2584';
+      return '\u2582';
+    }
 
-      for (let i = 0; i < packed.length; i += BLE_CHUNK_SIZE) {
-        const chunk = packed.slice(i, Math.min(i + BLE_CHUNK_SIZE, packed.length));
-        packetNum++;
+    // ---- WiFi fast sync (LAN HTTP transport, key paired over BLE) ----
+    function dockIp() { try { return localStorage.getItem('tc_dock_ip') || ''; } catch (e) { return ''; } }
+    function dockKey() { try { return localStorage.getItem('tc_wkey') || ''; } catch (e) { return ''; } }
+    let wifiSyncOk = false;
+    try { wifiSyncOk = localStorage.getItem('tc_wifi_sync') === '1'; } catch (e) {}
 
-        // Every BURST_SIZE packets (or the last packet), use writeWithResponse as sync barrier
-        if (packetNum % BURST_SIZE === 0 || i + BLE_CHUNK_SIZE >= packed.length) {
-          await btCharacteristic.writeValueWithResponse(chunk);
+    function wifiFastAvailable() {
+      return wifiSyncOk && dockIp() && dockKey() && location.protocol !== 'https:';
+    }
+
+    function fastSyncNote() {
+      const el = document.getElementById('fastSyncStatus');
+      if (!el) return;
+      if (location.protocol === 'https:')
+        el.textContent = 'Blocked from the https app (browser rule). Works when the app is opened locally / from the dock.';
+      else if (wifiFastAvailable()) el.textContent = 'Fast sync ready via ' + dockIp() + ':8080';
+      else el.textContent = '';
+    }
+
+    async function httpSend(path, bytes, onPct) {
+      if (onPct) onPct(5);
+      const ctl = new AbortController();
+      const t = setTimeout(() => ctl.abort(), 20000);
+      try {
+        const r = await fetch('http://' + dockIp() + ':8080' + path, {
+          method: 'POST',
+          headers: { 'X-Auth': dockKey(), 'Content-Type': 'application/octet-stream' },
+          body: bytes,
+          signal: ctl.signal
+        });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+      } finally { clearTimeout(t); }
+      if (onPct) onPct(100);
+    }
+
+    window.enableFastSync = async function() {
+      const el = document.getElementById('fastSyncStatus');
+      if (location.protocol === 'https:') { fastSyncNote(); return; }
+      if (!ctrlChar) { el.textContent = 'Connect Bluetooth first.'; return; }
+      if (!dockIp()) {
+        el.textContent = 'Asking the dock for its IP...';
+        try { await writeCtrl('IP'); } catch (e) {}
+        for (let i = 0; i < 12 && !dockIp(); i++) await sleep(250);
+        if (!dockIp()) { el.textContent = 'Dock is not on WiFi yet - send WiFi details first.'; return; }
+      }
+      let key = dockKey();
+      if (!key) {
+        const b = new Uint8Array(16);
+        crypto.getRandomValues(b);
+        key = Array.from(b, x => x.toString(16).padStart(2, '0')).join('');
+        try { localStorage.setItem('tc_wkey', key); } catch (e) {}
+      }
+      try {
+        el.textContent = 'Pairing key with dock...';
+        const ok = bleWaitFor('OK', 5000);
+        await writeCtrl('WKEY ' + key);
+        await ok;
+        el.textContent = 'Testing LAN connection...';
+        const ctl = new AbortController();
+        const t = setTimeout(() => ctl.abort(), 4000);
+        const r = await fetch('http://' + dockIp() + ':8080/ping', { signal: ctl.signal });
+        clearTimeout(t);
+        if (!r.ok) throw new Error('ping ' + r.status);
+        wifiSyncOk = true;
+        try { localStorage.setItem('tc_wifi_sync', '1'); } catch (e) {}
+        fastSyncNote();
+        showStatus('Fast WiFi sync enabled!', 'success');
+      } catch (e) {
+        wifiSyncOk = false;
+        el.textContent = 'Could not reach the dock on the LAN (' + e.message + '). Same network? Dock on WiFi?';
+      }
+    };
+    setTimeout(fastSyncNote, 500);
+
+    function hideWifiScan() {
+      clearTimeout(wifiScanTimer);
+      wifiScanResults = [];
+      const el = document.getElementById('wifiScanList');
+      if (el) el.innerHTML = '';
+      const btn = document.getElementById('wifiScanBtn');
+      if (btn) { btn.disabled = false; btn.textContent = 'Scan for networks'; }
+    }
+
+    async function dockWifiScan() {
+      if (!ctrlChar) { showStatus('Connect Bluetooth first', 'error'); return; }
+      const btn = document.getElementById('wifiScanBtn');
+      wifiScanResults = [];
+      document.getElementById('wifiScanList').innerHTML =
+        '<div style="font-size:12px; color:#889; padding:4px 2px;">Scanning...</div>';
+      btn.disabled = true;
+      btn.textContent = 'Scanning...';
+      clearTimeout(wifiScanTimer);
+      wifiScanTimer = setTimeout(() => renderWifiScan(true), 12000);
+      try { await writeCtrl('SCAN'); }
+      catch (e) { showStatus('Scan failed: ' + e.message, 'error'); renderWifiScan(true); }
+    }
+    window.dockWifiScan = dockWifiScan;
+
+    function renderWifiScan(done) {
+      const el = document.getElementById('wifiScanList');
+      if (!el) return;
+      if (done) {
+        clearTimeout(wifiScanTimer);
+        const btn = document.getElementById('wifiScanBtn');
+        btn.disabled = false;
+        btn.textContent = 'Scan again';
+      }
+      if (!wifiScanResults.length) {
+        el.innerHTML = done ? '<div style="font-size:12px; color:#889; padding:4px 2px;">No networks found.</div>' : el.innerHTML;
+        return;
+      }
+      const sel = document.getElementById('wifiSsid').value;
+      el.innerHTML = '';
+      wifiScanResults.forEach(n => {
+        const row = document.createElement('div');
+        const isSel = n.ssid === sel;
+        row.style.cssText = 'display:flex; align-items:center; gap:8px; padding:7px 8px; margin-bottom:3px;'
+          + ' border-radius:8px; cursor:pointer; font-size:13px;'
+          + (isSel ? ' background:#3b2a6b; outline:1px solid #8b5cf6;' : ' background:#0f1626;');
+        row.innerHTML = `
+          <span style="color:#4ade80; font-size:11px; letter-spacing:1px; width:30px;">${wifiBars(n.rssi)}</span>
+          <span style="flex:1; color:#fff;">${n.ssid.replace(/</g, '&lt;')}</span>
+          ${n.enc ? '<span style="color:#889; font-size:12px;">&#128274;</span>' : '<span style="color:#667; font-size:11px;">open</span>'}`;
+        row.onclick = () => {
+          document.getElementById('wifiSsid').value = n.ssid;
+          hideWifiScan();
+          const p = document.getElementById('wifiPass');
+          if (n.enc) p.focus();
+          else p.value = '';
+        };
+        el.appendChild(row);
+      });
+    }
+
+    async function dockWifi() {
+      if (!ctrlChar) { showStatus('Connect Bluetooth first', 'error'); return; }
+      const ssid = document.getElementById('wifiSsid').value.trim().replace(/\|/g, '');
+      const pass = document.getElementById('wifiPass').value.replace(/\|/g, '');
+      if (!ssid) { showStatus('Enter a network name', 'error'); return; }
+      try {
+        await writeCtrl('WIFI ' + ssid + '|' + pass);
+        try { localStorage.setItem('tc_wifi', JSON.stringify({ ssid, pass })); } catch (e) {}
+        hideWifiScan();
+        showStatus('WiFi details sent - dock is trying to connect...', 'info');
+      } catch (e) { showStatus('WiFi send failed: ' + e.message, 'error'); }
+    }
+    window.dockWifi = dockWifi;
+
+    // prefill remembered WiFi details (entered once, reused forever)
+    try {
+      const savedWifi = JSON.parse(localStorage.getItem('tc_wifi') || 'null');
+      if (savedWifi) {
+        document.getElementById('wifiSsid').value = savedWifi.ssid || '';
+        document.getElementById('wifiPass').value = savedWifi.pass || '';
+      }
+    } catch (e) {}
+
+    async function dockBtn(n) {
+      if (!ctrlChar) { showStatus('Connect Bluetooth first', 'error'); return; }
+      try { await writeCtrl('BTN:' + n); } catch (e) { showStatus('Button send failed: ' + e.message, 'error'); }
+    }
+    window.dockBtn = dockBtn;
+
+    function withTimeout(p, ms, what) {
+      return Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error(what + ' timed out')), ms))]);
+    }
+
+    let sendInProgress = false;
+
+    async function sendBLE(packed, cardName, beginCmd, onPct) {
+      if (sendInProgress) { showStatus('A send is already in progress', 'error'); return; }
+      sendInProgress = true;
+      try {
+        ackBase = 0;
+        // BEGIN with auto-wait if the dock is mid-draw
+        let began = false;
+        for (let attempt = 0; attempt < 3 && !began; attempt++) {
+          const resp = bleWaitFor('RDY', 5000).then(() => 'RDY').catch(() => null);
+          const busy = bleWaitFor('ERR:busy', 5000).then(() => 'BUSY').catch(() => null);
+          await withTimeout(writeCtrl(beginCmd || ('BEGIN ' + packed.length)), 5000, 'BEGIN write');
+          const outcome = await Promise.race([resp, busy, sleep(5200).then(() => 'TIMEOUT')]);
+          if (outcome === 'RDY') { began = true; break; }
+          if (outcome === 'BUSY') {
+            showStatus('Dock is drawing - waiting...', 'info');
+            try { await bleWaitFor('DONE', 15000); } catch (e) { await sleep(3000); }  // draws take <=10s; retry sooner if DONE was lost
+            continue;
+          }
+          throw new Error('Dock did not respond to BEGIN');
+        }
+        if (!began) throw new Error('Dock stayed busy - try again shortly');
+
+        const CHUNK = 244, WINDOW = 12288, STALL_MS = 10000;
+        const canNR = !!dataChar.writeValueWithoutResponse;
+        const t0 = Date.now();
+
+        for (let off = 0; off < packed.length; off += CHUNK) {
+          // poll the ack counter - immune to missed notification races
+          const stallStart = Date.now();
+          while (off - ackBase > WINDOW) {
+            await sleep(30);
+            if (Date.now() - stallStart > STALL_MS) {
+              throw new Error('Dock stopped responding at ' + Math.round(off / packed.length * 100) + '%');
+            }
+          }
+          const slice = packed.slice(off, Math.min(off + CHUNK, packed.length));
+          if (canNR) await withTimeout(dataChar.writeValueWithoutResponse(slice), 5000, 'BLE write');
+          else await withTimeout(dataChar.writeValue(slice), 5000, 'BLE write');
+          if ((off / CHUNK) % 8 === 0) {
+            const pct = Math.round(off / packed.length * 100);
+            if (onPct) onPct(pct);
+            else {
+              const elapsed = (Date.now() - t0) / 1000;
+              const rate = off / Math.max(0.001, elapsed);
+              const eta = rate > 0 ? (packed.length - off) / rate : 0;
+              showStatus(`Sending ${cardName}...`, 'info', pct, eta);
+            }
+          }
+        }
+        // END handshake with retries: the OK notify can be lost to congestion,
+        // and the firmware re-acks a repeated END without double-storing.
+        let endAcked = false;
+        for (let t = 0; t < 3 && !endAcked; t++) {
+          const ok = bleWaitFor('OK', 4000);
+          await withTimeout(writeCtrl('END'), 5000, 'END write');
+          try { await ok; endAcked = true; } catch (e) {}
+        }
+        if (!endAcked) throw new Error('Dock did not confirm the transfer');
+        // Only sends that trigger a draw wait for DONE. For store-only transfers
+        // (THM / IMB / IMG show=0) the OK above IS completion - their DONE fires
+        // ~15ms after OK and occasionally gets lost to notify congestion, which
+        // used to hang this wait forever.
+        const drawsNow = !beginCmd || /^(IMG|IMB) .+ 1$/.test(beginCmd);
+        if (onPct) onPct(100);
+        else if (drawsNow) showStatus(`${cardName} sent - dock is drawing...`, 'info', 100);
+        if (drawsNow) {
+          await bleWaitFor('DONE', 60000);
+          if (!onPct) {
+            const totalSec = ((Date.now() - t0) / 1000).toFixed(1);
+            showStatus(`${cardName} displayed! (${totalSec}s transfer)`, 'success', 100);
+          }
         } else {
-          await btCharacteristic.writeValueWithoutResponse(chunk);
+          await sleep(150);  // let the dock's store loop clear before the next transfer
         }
-
-        sent += chunk.length;
-
-        if (packetNum % 3 === 0 || sent === packed.length) {
-          const pct = Math.round((sent / packed.length) * 100);
-          const elapsed = (Date.now() - t0) / 1000;
-          const rate = sent / elapsed;
-          const eta = rate > 0 ? (packed.length - sent) / rate : 0;
-          showStatus(`Sending ${cardName}...`, 'info', pct, eta);
-        }
+      } finally {
+        sendInProgress = false;
       }
-
-      await sleep(100);
-      await btCharacteristic.writeValueWithResponse(new Uint8Array([0xBB]));
-
-      const totalSec = ((Date.now() - t0) / 1000).toFixed(1);
-      const kbps = (packed.length / ((Date.now() - t0) / 1000) / 1024).toFixed(1);
-      showStatus(`${cardName} sent in ${totalSec}s (${kbps} KB/s)!`, 'success', 100);
     }
 
     function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+    function dockId(card) { return (card.id || '').replace(/-/g, '').slice(0, 8) || 'xxxxxxxx'; }
+
+    function makeThumbBytes(imgLike) {
+      const c = document.createElement('canvas'); c.width = 56; c.height = 78;
+      const x = c.getContext('2d');
+      x.imageSmoothingEnabled = true; x.imageSmoothingQuality = 'high';
+      x.fillStyle = '#000'; x.fillRect(0, 0, 56, 78);
+      x.drawImage(imgLike, 0, 0, 56, 78);
+      const d = x.getImageData(0, 0, 56, 78);
+      const out = new Uint8Array(56 * 78 * 2);
+      for (let i = 0; i < 56 * 78; i++) {
+        const v = ((d.data[i*4] & 0xF8) << 8) | ((d.data[i*4+1] & 0xFC) << 3) | (d.data[i*4+2] >> 3);
+        out[i*2] = v & 0xFF;          // little-endian for the ESP
+        out[i*2+1] = (v >> 8) & 0xFF;
+      }
+      return out;
+    }
+
+    async function loadCardImage(imageUrl) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = () => reject(new Error('Image load failed')); img.src = imageUrl; });
+      return img;
+    }
+
+    // serialize all card transfers: overlapping BLE flows interleave and stall
+    let sendChain = Promise.resolve();
+    let chainDepth = 0;
+    function enqueueSend(fn) {
+      if (chainDepth > 0) showStatus('Waiting for the current transfer to finish...', 'info');
+      chainDepth++;
+      const run = async () => { try { return await fn(); } finally { chainDepth--; } };
+      const p = sendChain.then(run, run);
+      sendChain = p.catch(() => {});
+      return p;
+    }
+
     async function sendCard(imageUrl, cardName) {
-      if (!btCharacteristic) { showStatus('Connect Bluetooth first', 'error'); return; }
+      return enqueueSend(() => sendCardInner(imageUrl, cardName));
+    }
+    async function sendCardInner(imageUrl, cardName) {
+      if (!ctrlChar || !dataChar) { showStatus('Connect Bluetooth first', 'error'); return; }
       try {
         showStatus(`Loading ${cardName}...`, 'info', 0);
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        await new Promise((resolve, reject) => { img.onload = resolve; img.onerror = () => reject(new Error('Image load failed')); img.src = imageUrl; });
-        canvas.width = 300;
-        canvas.height = 400;
-        ctx.drawImage(img, 0, 0, 300, 400);
-        const imageData = ctx.getImageData(0, 0, 300, 400);
+        const img = await loadCardImage(imageUrl);
         showStatus(`Processing ${cardName}...`, 'info', 0);
-        const dithered = processImage(imageData, 300, 400);
-        const packed = packTo1Bit(dithered);
+        const packed = processImageNew(portraitSource(img));
         if (packed.length !== IMAGE_PACKED_SIZE) { showStatus(`Pack error: ${packed.length} != ${IMAGE_PACKED_SIZE}`, 'error'); return; }
-        await sendBLE(packed, cardName);
+        // live sends only need the render the active panel will draw - ask the dock
+        let dockPanel = 'A';
+        try {
+          const pw = bleWaitFor('P:', 3000);
+          await writeCtrl('PANEL');
+          dockPanel = (await pw) === 'P:B' ? 'B' : 'A';
+        } catch (e) {}  // older firmware: assume A, send the full render
+        if (dockPanel === 'B') {
+          await sendBLE(packed.packedB, cardName, 'IMB ' + packed.packedB.length + ' - 1');
+        } else {
+          await sendBLE(packed, cardName, 'IMG ' + packed.length + ' - 1');
+        }
       } catch (error) {
         showStatus('Error: ' + error.message, 'error');
       }
     }
+
+    // thumbnail URL cache so the Dock tab can show images for saved cards
+    let dockThumbCache = {};
+    try { dockThumbCache = JSON.parse(localStorage.getItem('tc_dock_thumbs') || '{}'); } catch (e) {}
+    function cacheDockThumb(id, url) {
+      if (!url) return;
+      dockThumbCache[id] = url;
+      try { localStorage.setItem('tc_dock_thumbs', JSON.stringify(dockThumbCache)); } catch (e) {}
+    }
+
+    // core save used by Dock+ buttons and deck import
+    async function dockSaveCore(card, imageUrl, thumbUrl, label, onPct, fav = 1) {
+      return enqueueSend(() => dockSaveCoreInner(card, imageUrl, thumbUrl, label, onPct, fav));
+    }
+    async function dockSaveCoreInner(card, imageUrl, thumbUrl, label, onPct, fav = 1) {
+      const id = dockId(card);
+      const disp = label || card.name;
+      const pt = (card.power && card.toughness) ? (card.power + '/' + card.toughness) : '';
+      const img = await loadCardImage(imageUrl);
+      const packed = processImageNew(portraitSource(img));
+      const thumb = makeThumbBytes(portraitSource(img));
+      let viaWifi = false;
+      if (wifiFastAvailable()) {
+        // 1.5s liveness probe first: a stale fast-sync flag (dock off WiFi) must not
+        // cost a 20s fetch timeout on the first save after a page refresh
+        let alive = false;
+        try {
+          const ctl = new AbortController();
+          const t = setTimeout(() => ctl.abort(), 1500);
+          const r = await fetch('http://' + dockIp() + ':8080/ping', { signal: ctl.signal });
+          clearTimeout(t);
+          alive = r.ok;
+        } catch (e) {}
+        if (!alive) {
+          console.warn('Fast sync flagged but dock not reachable - using BLE');
+          wifiSyncOk = false;
+          try { localStorage.setItem('tc_wifi_sync', '0'); } catch (e) {}
+          fastSyncNote();
+        } else try {
+          await httpSend('/cardb?id=' + id, packed.packedB, onPct);
+          await httpSend('/card?id=' + id + '&show=0', packed, onPct);
+          await httpSend('/thm?id=' + id, thumb);
+          viaWifi = true;
+        } catch (e) {
+          console.warn('WiFi sync failed, falling back to BLE:', e);
+          wifiSyncOk = false;
+          try { localStorage.setItem('tc_wifi_sync', '0'); } catch (e) {}
+          fastSyncNote();
+        }
+      }
+      if (!viaWifi) {
+        await sendBLE(packed.packedB, disp, 'IMB ' + packed.packedB.length + ' ' + id, onPct ? (() => {}) : undefined);
+        await sendBLE(packed, disp, 'IMG ' + packed.length + ' ' + id + ' 0', onPct);
+        await sendBLE(thumb, disp, 'THM ' + thumb.length + ' ' + id, onPct ? (() => {}) : undefined);
+      }
+      const typeLine = ((card.type_line || (card.card_faces && card.card_faces[0].type_line) || ''))
+                        .replace(/\|/g, '/').slice(0, 23);
+      const metaOk = bleWaitFor('OK', 5000);
+      await writeCtrl('META ' + id + '|' + card.name.replace(/\|/g, ' ') + '|' + pt
+                      + '|' + typeLine + '|' + (card.id || '') + '|' + (fav ? 1 : 0));
+      await metaOk;
+      cacheDockThumb(id, thumbUrl || imageUrl);
+      return id;
+    }
+
+    // Save a card into the dock's onboard favourites (image + thumbnail + meta)
+    window.saveCardToDock = async function(card, imageUrl) {
+      if (!ctrlChar || !dataChar) { showStatus('Connect Bluetooth first', 'error'); return; }
+      try {
+        showStatus(`Saving ${card.name} to dock...`, 'info', 0);
+        await dockSaveCore(card, imageUrl, card.image_small || (card.image_uris && card.image_uris.small));
+        showStatus(`${card.name} saved to dock!`, 'success', 100);
+      } catch (error) {
+        showStatus('Save failed: ' + error.message, 'error');
+      }
+    };
 
     // =====================================================
     // STATUS
@@ -1284,6 +2891,534 @@
         setTimeout(() => { if (statusEl.querySelector(`.${type}`)) statusEl.innerHTML = ''; }, 5000);
       }
     }
+
+    // =====================================================
+    // DECK IMPORT -> TOKEN DETECTION -> DOCK
+    // =====================================================
+    const DECK_PROXY = 'https://tokenconjurer.shippyuk.workers.dev';
+
+    let importGroups = [];       // one per functional token (oracle_id)
+    let importCommanders = [];   // [{name, chosen, prints, printsLoaded, expanded}]
+    let importDeckName = 'Imported deck';
+
+    function impStatus(t) { document.getElementById('importStatus').textContent = t; }
+    function tokenUris(t) { return t.image_uris || (t.card_faces && t.card_faces[0].image_uris) || {}; }
+
+    async function fetchViaProxy(param, id) {
+      if (!DECK_PROXY) throw new Error('URL import needs the relay set up - paste the decklist instead');
+      const r = await fetch(DECK_PROXY + '?' + param + '=' + id);
+      if (!r.ok) throw new Error('Deck fetch failed (' + r.status + ')' + (param === 'mox' && r.status === 403 ? ' - Moxfield blocked the relay; paste the list instead' : ''));
+      return r.json();
+    }
+
+    async function fetchArchidekt(url) {
+      const m = url.match(/archidekt\.com\/decks\/(\d+)/);
+      if (!m) return null;
+      const j = await fetchViaProxy('deck', m[1]);
+      importDeckName = (j.name || 'Imported deck').slice(0, 38);
+      const names = [], commanders = [];
+      (j.cards || []).forEach(c => {
+        const n = c.card && c.card.oracleCard && c.card.oracleCard.name;
+        if (!n) return;
+        if (!names.includes(n)) names.push(n);
+        const cats = c.categories || [];
+        if (cats.some(x => /commander/i.test(x)) && !commanders.includes(n)) commanders.push(n);
+      });
+      return { names, commanders };
+    }
+
+    async function fetchMoxfield(url) {
+      const m = url.match(/moxfield\.com\/decks\/([A-Za-z0-9_-]+)/);
+      if (!m) return null;
+      const j = await fetchViaProxy('mox', m[1]);
+      importDeckName = (j.name || 'Imported deck').slice(0, 38);
+      const names = [], commanders = [];
+      const collect = (board, isCmd) => {
+        const cards = (j.boards && j.boards[board] && j.boards[board].cards) || {};
+        Object.values(cards).forEach(c => {
+          const n = c.card && c.card.name;
+          if (!n) return;
+          if (!names.includes(n)) names.push(n);
+          if (isCmd && !commanders.includes(n)) commanders.push(n);
+        });
+      };
+      collect('commanders', true);
+      collect('mainboard', false);
+      collect('companions', false);
+      return { names, commanders };
+    }
+
+    function parseDecklist(text) {
+      const names = [], commanders = [];
+      let section = '';
+      text.split('\n').forEach(line => {
+        line = line.trim();
+        if (!line) { section = ''; return; }
+        if (line.startsWith('//') || line.startsWith('#')) return;
+        if (!/^\d/.test(line) && /^(commander|commanders|sideboard|maybeboard|deck|mainboard|companion)s?\b/i.test(line)) {
+          section = line.toLowerCase();
+          return;
+        }
+        const m = line.match(/^(?:\d+x?\s+)?(.+?)(?:\s+\([A-Z0-9]{3,5}\).*)?$/);
+        if (m && m[1]) {
+          if (!names.includes(m[1])) names.push(m[1]);
+          if (/^commander/.test(section) && !commanders.includes(m[1])) commanders.push(m[1]);
+        }
+      });
+      return { names, commanders };
+    }
+
+    function isWantedPart(p) {
+      if (p.component === 'token') return true;
+      if (/emblem/i.test(p.type_line || '')) return true;
+      if (p.name === 'The Monarch' || p.name === "City's Blessing") return true;
+      return false;
+    }
+
+    async function importDeck() {
+      const url = document.getElementById('importUrl').value.trim();
+      const text = document.getElementById('importText').value.trim();
+      document.getElementById('importResults').innerHTML = '';
+      importGroups = [];
+      importCommanders = [];
+      try {
+        let deck = null;
+        if (url) {
+          impStatus('Fetching deck...');
+          deck = await fetchArchidekt(url) || await fetchMoxfield(url);
+          if (!deck) { impStatus('Not an Archidekt or Moxfield deck URL.'); return; }
+        } else if (text) {
+          importDeckName = 'Imported deck';
+          deck = parseDecklist(text);
+        } else { impStatus('Give me a URL or a decklist.'); return; }
+
+        if (!deck.names.length) { impStatus('No cards found.'); return; }
+        impStatus('Resolving ' + deck.names.length + ' cards via Scryfall...');
+
+        const partIds = {};
+        const byName = {};
+        for (let i = 0; i < deck.names.length; i += 75) {
+          const batch = deck.names.slice(i, i + 75).map(n => ({ name: n }));
+          const r = await fetch('https://api.scryfall.com/cards/collection', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identifiers: batch })
+          });
+          const j = await r.json();
+          (j.data || []).forEach(card => {
+            byName[card.name] = card;
+            (card.all_parts || []).forEach(part => {
+              if (isWantedPart(part) && part.id !== card.id) partIds[part.id] = true;
+            });
+          });
+          impStatus('Resolving cards... ' + Math.min(i + 75, deck.names.length) + '/' + deck.names.length);
+        }
+
+        // commanders: default chosen = the resolved card
+        deck.commanders.forEach(n => {
+          const card = byName[n] || Object.values(byName).find(c => c.name.startsWith(n));
+          if (card) importCommanders.push({ name: card.name, chosen: card, prints: [], printsLoaded: false, expanded: false });
+        });
+
+        const ids = Object.keys(partIds);
+        if (!ids.length && !importCommanders.length) { impStatus('No tokens or emblems found in this deck.'); return; }
+        impStatus('Fetching ' + ids.length + ' token cards...');
+
+        const fetched = [];
+        for (let i = 0; i < ids.length; i += 75) {
+          const batch = ids.slice(i, i + 75).map(id => ({ id }));
+          const r = await fetch('https://api.scryfall.com/cards/collection', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ identifiers: batch })
+          });
+          const j = await r.json();
+          (j.data || []).forEach(t => fetched.push(t));
+        }
+
+        // group by oracle_id: same functional token collapses, different abilities stay apart
+        const groups = {};
+        fetched.forEach(t => {
+          const key = t.oracle_id || t.id;
+          if (!groups[key]) {
+            groups[key] = { oracleId: key, name: t.name,
+                            type: t.type_line || '', pt: (t.power && t.toughness) ? t.power + '/' + t.toughness : '',
+                            text: (t.oracle_text || (t.card_faces && t.card_faces[0].oracle_text) || ''),
+                            kw: (t.keywords || []).join(', '),
+                            chosen: t, prints: [t], printsLoaded: false, expanded: false, checked: true };
+          } else if (!groups[key].prints.some(p => p.id === t.id)) {
+            groups[key].prints.push(t);
+          }
+        });
+        importGroups = Object.values(groups);
+
+        renderImportResults();
+        impStatus(importGroups.length + ' distinct tokens/emblems found. Pick art where you care.');
+      } catch (e) {
+        impStatus('Import failed: ' + e.message);
+      }
+    }
+    window.importDeck = importDeck;
+
+    async function loadPrints(entry) {
+      if (entry.printsLoaded) return;
+      const q = 'oracleid:' + entry.oracleId;
+      const r = await fetch('https://api.scryfall.com/cards/search?q=' + encodeURIComponent(q)
+                            + '&unique=prints&include_extras=true&include_variations=true');
+      if (r.ok) {
+        const j = await r.json();
+        if (j.data && j.data.length) entry.prints = j.data;
+      }
+      entry.printsLoaded = true;
+    }
+
+    async function loadCommanderPrints(entry) {
+      if (entry.printsLoaded) return;
+      const q = '!"' + entry.name + '"';
+      const r = await fetch('https://api.scryfall.com/cards/search?q=' + encodeURIComponent(q) + '&unique=prints');
+      if (r.ok) {
+        const j = await r.json();
+        if (j.data && j.data.length) entry.prints = j.data;
+      }
+      entry.printsLoaded = true;
+    }
+
+    function printsRow(list, entry, pickFn) {
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'display:flex; gap:8px; overflow-x:auto; padding:8px 0 8px 24px;';
+      list.forEach(p => {
+        const uris = tokenUris(p);
+        if (!uris.small) return;
+        const im = document.createElement('img');
+        im.src = uris.small;
+        im.style.cssText = 'width:96px; border-radius:6px; cursor:pointer;'
+          + (p.id === entry.chosen.id ? ' outline:3px solid #8b5cf6;' : ' opacity:.7;');
+        im.onclick = () => { entry.chosen = p; entry.expanded = false; renderImportResults(); };
+        wrap.appendChild(im);
+      });
+      return wrap;
+    }
+
+    function resetImport() {
+      document.getElementById('importInputs').style.display = '';
+      document.getElementById('importResults').innerHTML = '';
+      document.getElementById('importStatus').textContent = '';
+      importGroups = [];
+      importCommanders = [];
+    }
+    window.resetImport = resetImport;
+
+    function renderImportResults() {
+      const el = document.getElementById('importResults');
+      el.innerHTML = '';
+      document.getElementById('importInputs').style.display = 'none';
+      const back = document.createElement('div');
+      back.innerHTML = `<button class="deck-add-btn" onclick="resetImport()" style="margin-bottom:6px;">&larr; New import</button>
+        <span style="font-size:13px; color:#eee; margin-left:8px;">${importDeckName}</span>`;
+      el.appendChild(back);
+
+      if (importCommanders.length) {
+        const hd = document.createElement('div');
+        hd.style.cssText = 'font-size:12px; color:#8b5cf6; margin:8px 0 2px;';
+        hd.textContent = 'DECK FACE (commander art shown on the dock)';
+        el.appendChild(hd);
+        importCommanders.forEach((c, i) => {
+          const uris = tokenUris(c.chosen);
+          const row = document.createElement('div');
+          row.style.cssText = 'display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid #223;';
+          row.innerHTML = `
+            ${uris.small ? `<img src="${uris.small}" style="width:32px; border-radius:3px;">` : ''}
+            <div style="flex:1; font-size:13px;">${c.name}</div>
+            <button class="deck-add-btn" onclick="toggleCmdArt(${i})">${c.expanded ? 'Close' : 'Art'}</button>`;
+          el.appendChild(row);
+          if (c.expanded) el.appendChild(printsRow(c.prints, c, null));
+        });
+      }
+
+      if (importGroups.length) {
+        const hd = document.createElement('div');
+        hd.style.cssText = 'font-size:12px; color:#8b5cf6; margin:10px 0 2px;';
+        hd.textContent = 'TOKENS & EMBLEMS';
+        el.appendChild(hd);
+      }
+      importGroups.forEach((g, i) => {
+        const uris = tokenUris(g.chosen);
+        const snippet = g.text ? g.text.replace(/\n/g, ' ').slice(0, 52) : '';
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid #223;';
+        row.innerHTML = `
+          <input type="checkbox" id="imp-${i}" ${g.checked ? 'checked' : ''} onchange="importGroups[${i}].checked=this.checked">
+          ${uris.small ? `<img src="${uris.small}" style="width:32px; border-radius:3px;" onclick="zoomCard('${uris.normal || uris.small}')">` : ''}
+          <div style="flex:1; font-size:13px;">
+            ${g.name}${g.pt ? ' <span style="color:#889">(' + g.pt + ')</span>' : ''}
+            ${g.kw ? `<div style="font-size:11px; color:#a78bfa;">${g.kw}</div>` : ''}
+            ${snippet ? `<div style="font-size:11px; color:#667;">${snippet}</div>` : ''}
+          </div>
+          <button class="deck-add-btn" onclick="importAddToDeck(${i})" title="Add to app deck">+D</button>
+          <button class="deck-add-btn" onclick="toggleTokenArt(${i})">${g.expanded ? 'Close' : (g.prints.length > 1 || !g.printsLoaded ? 'Art' : '')}</button>`;
+        el.appendChild(row);
+        if (g.expanded) el.appendChild(printsRow(g.prints, g, null));
+      });
+
+      const nameRow = document.createElement('div');
+      nameRow.style.cssText = 'margin-top:10px;';
+      nameRow.innerHTML = `
+        <input type="text" id="importDeckName" value="${importDeckName.replace(/"/g, '')}" style="width:100%; padding:8px; border-radius:8px; border:1px solid #333; background:#0f1626; color:#fff; font-size:13px; margin-bottom:6px;">
+        <button class="send-btn" style="width:100%;" id="syncBtn" onclick="sendImportToDock()">Send deck to dock</button>
+        <div id="syncBox" style="display:none; margin-top:8px;">
+          <div style="background:#0f1626; border-radius:8px; height:12px; overflow:hidden;">
+            <div id="syncBar" style="height:100%; width:0%; background:#8b5cf6; transition:width .2s;"></div>
+          </div>
+          <div id="syncText" style="font-size:12px; color:#9fe1cb; margin-top:4px;"></div>
+        </div>`;
+      el.appendChild(nameRow);
+    }
+
+    window.importAddToDeck = function(i) {
+      openDeckPicker(importGroups[i].chosen);
+    };
+
+    window.toggleTokenArt = async function(i) {
+      const g = importGroups[i];
+      if (!g.expanded) { impStatus('Loading printings...'); await loadPrints(g); impStatus(''); }
+      g.expanded = !g.expanded;
+      renderImportResults();
+    };
+
+    window.toggleCmdArt = async function(i) {
+      const c = importCommanders[i];
+      if (!c.expanded) { impStatus('Loading printings...'); await loadCommanderPrints(c); impStatus(''); }
+      c.expanded = !c.expanded;
+      renderImportResults();
+    };
+
+    // mirror the imported token deck into the app's own decks
+    function mirrorImportToAppDeck(deckName, chosenGroups) {
+      let d = decks.find(x => x.name === deckName);
+      if (!d) { d = { name: deckName, cards: [] }; decks.push(d); }
+      chosenGroups.forEach(g => {
+        const s = cardToStorable(g.chosen);
+        if (!d.cards.some(c => c.id === s.id)) d.cards.push(s);
+      });
+      saveDecks();
+      renderDecks();
+    }
+
+    window.sendImportToDock = async function() {
+      if (!ctrlChar || !dataChar) { impStatus('Connect Bluetooth first.'); return; }
+      const chosen = importGroups.filter(g => g.checked);
+      if (!chosen.length && !importCommanders.length) { impStatus('Nothing selected.'); return; }
+      const deckName = (document.getElementById('importDeckName').value.trim() || 'Imported deck')
+                        .replace(/[|,]/g, ' ').slice(0, 38);
+      const savedIds = [];
+      const failed = [];
+      const syncBtn = document.getElementById('syncBtn');
+      const syncBox = document.getElementById('syncBox');
+      const syncBar = document.getElementById('syncBar');
+      const syncText = document.getElementById('syncText');
+      syncBtn.disabled = true;
+      syncBox.style.display = '';
+      impStatus('');
+      const setSync = (i, name, pct, extra) => {
+        const overall = Math.round(((i + pct / 100) / chosen.length) * 100);
+        syncBar.style.width = overall + '%';
+        syncText.textContent = (i + 1) + ' of ' + chosen.length + ': ' + name + (extra ? ' ' + extra : '');
+      };
+
+      for (let i = 0; i < chosen.length; i++) {
+        const t = chosen[i].chosen;
+        const uris = tokenUris(t);
+        if (!uris.png && !uris.large) { failed.push(t.name + ' (no image)'); continue; }
+        let done = false;
+        for (let attempt = 1; attempt <= 2 && !done; attempt++) {
+          try {
+            setSync(i, t.name, 0, attempt > 1 ? '(retry)' : '');
+            const id = await dockSaveCore(t, uris.png || uris.large, uris.small, t.name,
+                                          pct => setSync(i, t.name, pct, attempt > 1 ? '(retry)' : ''), 0);
+            savedIds.push(id);
+            done = true;
+          } catch (e) {
+            console.warn('Token save failed', t.name, 'attempt', attempt, e);
+            setSync(i, t.name, 0, 'failed' + (attempt === 1 ? ', retrying...' : ''));
+            await sleep(1200);
+          }
+        }
+        if (!done) failed.push(t.name);
+        await sleep(250);
+      }
+
+      try {
+        let thumbId = '-';
+        if (importCommanders.length) {
+          const cmd = importCommanders[0];
+          const uris = tokenUris(cmd.chosen);
+          if (uris.png || uris.large) {
+            syncText.textContent = 'Sending deck face art...';
+            const cimg = await loadCardImage(uris.png || uris.large);
+            const cthumb = makeThumbBytes(portraitSource(cimg));
+            thumbId = dockId(cmd.chosen);
+            await sendBLE(cthumb, cmd.name + ' (deck face)', 'THM ' + cthumb.length + ' ' + thumbId, () => {});
+            cacheDockThumb(thumbId, uris.small);
+          }
+        }
+
+        syncText.textContent = 'Registering deck on dock...';
+        const ok = bleWaitFor('OK', 5000);
+        await writeCtrl('DECK ' + deckName + '|' + thumbId + '|' + savedIds.join(','));
+        await ok;
+        mirrorImportToAppDeck(deckName, chosen);
+        syncBar.style.width = '100%';
+        let msg = 'Done - "' + deckName + '" (' + savedIds.length + ' tokens) is on the dock.';
+        if (failed.length) msg += ' Failed: ' + failed.join(', ') + ' (tap send again to retry).';
+        syncText.textContent = msg;
+      } catch (e) {
+        syncText.textContent = 'Deck registration failed: ' + e.message + ' - tokens saved: ' + savedIds.length;
+      }
+      document.getElementById('syncBtn').disabled = false;
+    };
+
+    // =====================================================
+    // DOCK TAB - cards stored on the dock itself
+    // =====================================================
+    let dockCards = [];
+
+    async function refreshDockList() {
+      const el = document.getElementById('dockList');
+      if (!ctrlChar) {
+        el.innerHTML = '<div class="empty-state"><div class="empty-state-text">Connect Bluetooth first,<br>then reopen this tab.</div></div>';
+        return;
+      }
+      dockCards = [];
+      dockDecks = [];
+      el.innerHTML = '<div class="loading"><div class="spinner"></div><div>Reading dock...</div></div>';
+      try {
+        await writeCtrl('DECKS');
+        await bleWaitFor('D:END', 5000).catch(() => {});
+        await writeCtrl('LIST');
+      } catch (e) { el.innerHTML = '<div class="empty-state"><div class="empty-state-text">Could not read dock.</div></div>'; }
+    }
+
+    let dockDecks = [];
+
+    function renderDockList() {
+      const el = document.getElementById('dockList');
+      const count = document.getElementById('dockCount');
+      if (count) count.textContent = dockCards.length ? dockCards.length : '';
+      el.innerHTML = '';
+      if (dockDecks.length) {
+        const hd = document.createElement('div');
+        hd.style.cssText = 'font-size:12px; color:#8b5cf6; margin:4px 0;';
+        hd.textContent = 'DECKS ON DOCK';
+        el.appendChild(hd);
+        dockDecks.forEach(d => {
+          const div = document.createElement('div');
+          div.className = 'card-item';
+          div.innerHTML = `
+            <div class="card-main"><div class="card-info">
+              <div class="card-name">${d.name}</div>
+              <div class="card-set">${d.count} tokens</div>
+            </div></div>
+            <div class="card-actions">
+              <button class="deck-add-btn" onclick="dockDeckDelete('${d.name.replace(/'/g, "\\'")}')">Remove deck</button>
+            </div>`;
+          el.appendChild(div);
+        });
+      }
+      if (dockCards.length === 0 && dockDecks.length === 0) {
+        el.innerHTML = '<div class="empty-state"><div class="empty-state-text">Nothing saved on the dock yet.<br>Use Dock+ on any card, or import a deck.</div></div>';
+        return;
+      }
+      if (dockCards.length) {
+        const hd = document.createElement('div');
+        hd.style.cssText = 'font-size:12px; color:#8b5cf6; margin:10px 0 4px;';
+        hd.textContent = 'CARDS ON DOCK (' + dockCards.length + '/40)';
+        el.appendChild(hd);
+      }
+      dockCards.forEach(c => {
+        const thumbUrl = dockThumbCache[c.id]
+          || (c.sid ? 'https://api.scryfall.com/cards/' + c.sid + '?format=image&version=small' : null);
+        const div = document.createElement('div');
+        div.className = 'card-item';
+        div.innerHTML = `
+          <div class="card-main">
+            ${thumbUrl ? `<img class="card-thumb" src="${thumbUrl}" onclick="zoomCard(this.src)">`
+                       : `<div class="card-thumb" style="background:#233; display:flex; align-items:center; justify-content:center; color:#567; font-size:10px;">no img</div>`}
+            <div class="card-info">
+              <div class="card-name">${c.fav ? '&#9733; ' : ''}${c.name}</div>
+              <div class="card-set">${c.type ? c.type + (c.pt ? ' &middot; ' : '') : ''}${c.pt ? 'P/T ' + c.pt : ''}</div>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="send-btn" onclick="dockShow('${c.id}')">Show on Card</button>
+            <button class="deck-add-btn" onclick="dockAddToDeck('${c.id}')" title="Add to app deck">+D</button>
+            <button class="deck-add-btn" onclick="dockDelete('${c.id}')" title="Remove from dock">Remove</button>
+          </div>`;
+        el.appendChild(div);
+      });
+    }
+
+    window.dockDeckDelete = async function(name) {
+      if (!ctrlChar) return;
+      try {
+        const ok = bleWaitFor('OK', 5000);
+        await writeCtrl('DECKDEL ' + name);
+        await ok;
+        refreshDockList();
+      } catch (e) { showStatus('Remove failed: ' + e.message, 'error'); }
+    };
+
+    window.dockAddToDeck = async function(id) {
+      const c = dockCards.find(x => x.id === id);
+      if (!c || !c.sid) { showStatus('No card data for this entry', 'error'); return; }
+      try {
+        const r = await fetch('https://api.scryfall.com/cards/' + c.sid);
+        if (!r.ok) throw new Error('lookup failed');
+        openDeckPicker(await r.json());
+      } catch (e) { showStatus('Could not fetch card: ' + e.message, 'error'); }
+    };
+
+    window.dockShow = async function(id) {
+      if (!ctrlChar) return;
+      try {
+        showStatus('Writing to card...', 'info');
+        const done = bleWaitFor('DONE', 60000);
+        await writeCtrl('SHOW ' + id);
+        await done;
+        showStatus('Card displayed!', 'success');
+      } catch (e) { showStatus('Show failed: ' + e.message, 'error'); }
+    };
+
+    window.dockDelete = async function(id) {
+      if (!ctrlChar) return;
+      try {
+        const ok = bleWaitFor('OK', 5000);
+        await writeCtrl('DEL ' + id);
+        await ok;
+        refreshDockList();
+      } catch (e) { showStatus('Remove failed: ' + e.message, 'error'); }
+    };
+
+    // Display settings wiring
+    (function initDispSettings() {
+      const bind = (id, key, isFloat) => {
+        const el = document.getElementById(id);
+        const lbl = document.getElementById(id + 'V');
+        if (!el) return;
+        el.value = dispSettings[key];
+        if (lbl) lbl.textContent = dispSettings[key];
+        el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => {
+          dispSettings[key] = isFloat ? parseFloat(el.value) : el.value;
+          if (lbl) lbl.textContent = el.value;
+          saveDispSettings();
+        });
+      };
+      bind('dsMode', 'mode', false);
+      bind('dsBtrim', 'btrim', true);
+      bind('dsStrim', 'strim', true);
+      bind('dsTtrim', 'ttrim', true);
+      bind('dsGamma', 'gamma', true);
+      bind('dsBright', 'bright', true);
+      bind('dsContrast', 'contrast', true);
+      bind('dsDither', 'dither', false);
+    })();
   </script>
 
   <script>
