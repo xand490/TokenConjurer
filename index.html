@@ -2916,13 +2916,19 @@
       if (!m) return null;
       const j = await fetchViaProxy('deck', m[1]);
       importDeckName = (j.name || 'Imported deck').slice(0, 38);
+      // Archidekt categories are user-renamable; the real commander category is
+      // flagged isPremier, so trust the flag first and the name as fallback.
+      const premier = new Set((j.categories || [])
+        .filter(cat => cat.isPremier)
+        .map(cat => (cat.name || '').toLowerCase()));
       const names = [], commanders = [];
       (j.cards || []).forEach(c => {
         const n = c.card && c.card.oracleCard && c.card.oracleCard.name;
         if (!n) return;
         if (!names.includes(n)) names.push(n);
         const cats = c.categories || [];
-        if (cats.some(x => /commander/i.test(x)) && !commanders.includes(n)) commanders.push(n);
+        const isCmd = cats.some(x => premier.has((x || '').toLowerCase()) || /commander/i.test(x));
+        if (isCmd && !commanders.includes(n)) commanders.push(n);
       });
       return { names, commanders };
     }
@@ -3013,9 +3019,14 @@
           impStatus('Resolving cards... ' + Math.min(i + 75, deck.names.length) + '/' + deck.names.length);
         }
 
-        // commanders: default chosen = the resolved card
+        // commanders: default chosen = the resolved card.
+        // Match on the normalized front face: DFC separators differ between
+        // sites ("A // B" vs "A / B" vs front-face only) and case can vary.
+        const cmdNorm = s => (s || '').toLowerCase().split(/\s*\/{1,2}\s*/)[0].trim();
         deck.commanders.forEach(n => {
-          const card = byName[n] || Object.values(byName).find(c => c.name.startsWith(n));
+          const card = byName[n]
+            || Object.values(byName).find(c => cmdNorm(c.name) === cmdNorm(n))
+            || Object.values(byName).find(c => c.name.toLowerCase().startsWith(n.toLowerCase()));
           if (card) importCommanders.push({ name: card.name, chosen: card, prints: [], printsLoaded: false, expanded: false });
         });
 
@@ -3115,6 +3126,12 @@
         <span style="font-size:13px; color:#eee; margin-left:8px;">${importDeckName}</span>`;
       el.appendChild(back);
 
+      if (!importCommanders.length) {
+        const warn = document.createElement('div');
+        warn.style.cssText = 'font-size:12px; color:#f59e0b; margin:8px 0 2px;';
+        warn.textContent = 'No commander detected - the deck will have no face art on the dock.';
+        el.appendChild(warn);
+      }
       if (importCommanders.length) {
         const hd = document.createElement('div');
         hd.style.cssText = 'font-size:12px; color:#8b5cf6; margin:8px 0 2px;';
